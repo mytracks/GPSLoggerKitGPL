@@ -13,11 +13,11 @@ Das Paket MUST unter der GNU GPL Version 3 oder später (GPL-3.0-or-later) stehe
 - **THEN** enthält er eine Lizenzdatei mit dem Text der GPL Version 3, und die README nennt GPL-3.0-or-later
 
 ### Requirement: Plattform und Abhängigkeiten
-Das Paket MUST unter macOS ab Version 12 bauen und laufen. Es MUST nur von GPSLoggerKit und den Systembibliotheken abhängen, nicht von GPSLoaderKit, der App oder Paketen von Drittanbietern. GPSLoggerKit MUST umgekehrt nicht von diesem Paket abhängen.
+Das Paket MUST unter macOS ab Version 12 bauen und laufen. Es MUST nur von GPSLoggerKit, eingebunden per Repository-URL und veröffentlichter Version, und den Systembibliotheken abhängen, nicht von GPSLoaderKit, der App oder Paketen von Drittanbietern. GPSLoggerKit MUST umgekehrt nicht von diesem Paket abhängen.
 
 #### Scenario: Bauen mit GPSLoggerKit allein
-- **WHEN** die Ordner `Packages/GPSLoggerKitGPL` und `Packages/GPSLoggerKit` gemeinsam an einen anderen Ort kopiert werden und das GPL-Paket dort gebaut und getestet wird
-- **THEN** gelingen Build und Tests
+- **WHEN** dieses Repository frisch geklont und dort gebaut und getestet wird
+- **THEN** löst der Swift Package Manager nur GPSLoggerKit in einer veröffentlichten Version auf, und Build und Tests gelingen
 
 #### Scenario: Keine Rückabhängigkeit
 - **WHEN** GPSLoggerKit allein gebaut wird
@@ -46,7 +46,7 @@ Portierter Code MUST aus Quellen stammen, deren Lizenz mit GPL-3.0-or-later vere
 - **THEN** wird sie nicht portiert, und die Familie wird aus Black-Box-Beobachtung umgesetzt
 
 ### Requirement: Herkunft portierter Formate
-Für jedes Format MUST die Herkunftsliste des Pakets die Vorlagen nennen: Projekt, Datei, Version oder Commit, Urheber und Lizenz. Sie MUST auch eigene Ergänzungen, Spezifikationen und Black-Box-Beobachtungen nennen. Jede Quelldatei, die aus einer Vorlage portiert ist, MUST einen Kopf mit den Urheberhinweisen der Vorlage, ihrer Lizenz und dem Hinweis tragen, dass sie für gpsloader übersetzt und verändert wurde, mit Datum.
+Für jedes Format MUST die Herkunftsliste des Pakets die Vorlagen nennen: Projekt, Datei, Version oder Commit, Urheber und Lizenz. Sie MUST auch eigene Ergänzungen, Spezifikationen und Black-Box-Beobachtungen nennen. Jede aus einer Vorlage portierte Quelldatei MUST einen Kopf mit den Urheberhinweisen und der Lizenz der Vorlage und dem Hinweis auf Übersetzung und Veränderung mit Datum tragen; neue Dateien nennen dabei GPSLoggerKitGPL.
 
 #### Scenario: Neues Format
 - **WHEN** ein Format zum Katalog des Pakets hinzukommt
@@ -54,7 +54,7 @@ Für jedes Format MUST die Herkunftsliste des Pakets die Vorlagen nennen: Projek
 
 #### Scenario: Portierte Datei
 - **WHEN** eine Quelldatei aus einer Vorlage übersetzt wurde
-- **THEN** nennt ihr Kopf die Urheber der Vorlage, deren Lizenz und die Veränderung durch gpsloader mit Datum
+- **THEN** nennt ihr Kopf die Urheber der Vorlage, deren Lizenz und die Übersetzung und Veränderung mit Datum, bei neuen Dateien „for GPSLoggerKitGPL“
 
 ### Requirement: Trennung von GPSLoggerKit
 Eine Logger-Familie SHALL entweder in GPSLoggerKit (Clean-Room) oder in diesem Paket (Portierung) umgesetzt werden, nicht in beiden. Wurde für eine Familie Quelltext unter einer Copyleft-Lizenz gelesen, MUST sie in diesem Paket bleiben. Die Zuordnung jeder Familie MUST im Projektkontext festgehalten sein.
