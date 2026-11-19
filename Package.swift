@@ -11,7 +11,7 @@ let package = Package(
         .library(name: "GPSLoggerKitGPL", targets: ["GPSLoggerKitGPL"]),
     ],
     dependencies: [
-        .package(path: "../GPSLoggerKit"),
+        .package(url: "https://github.com/mytracks/GPSLoggerKit.git", .upToNextMinor(from: "0.1.0")),
     ],
     targets: [
         .target(

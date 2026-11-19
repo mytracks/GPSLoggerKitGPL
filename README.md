@@ -1,8 +1,8 @@
 # GPSLoggerKitGPL
 
-File formats and logger drivers for gpsloader that are ported from sources under the GNU GPL or a
-license compatible with it. It complements [GPSLoggerKit](../GPSLoggerKit), which stays MIT licensed
-and clean-room.
+File formats and logger drivers that are ported from sources under the GNU GPL or a license
+compatible with it. It complements [GPSLoggerKit](https://github.com/mytracks/GPSLoggerKit), which stays
+MIT licensed and clean-room, and is used by [myTracks Loader](https://github.com/mytracks/gpsloader).
 
 - License: **GPL-3.0-or-later** (see `LICENSE`). Any app that links this package is, as a whole,
   covered by the GPL and must offer its complete source code.
@@ -89,3 +89,19 @@ binary of myTracks (git history of the myTracks repository, commit `e0d1f18`, wi
 copied to a temporary directory and never into this repository. Fixture tests write their GPX for the comparison
 when `GPSLOGGERKITGPL_COMPARE_DIR` is set; device protocols are compared with a simulated device on a pseudo
 terminal.
+
+## Installation
+
+Swift Package Manager (macOS only), with the version range of the current minor release:
+
+```swift
+.package(url: "https://github.com/mytracks/GPSLoggerKitGPL.git", .upToNextMinor(from: "0.1.0"))
+```
+
+Releases are listed on GitHub with release notes (`docs/releases/`).
+
+## History
+
+The package was developed in [mytracks/gpsloader](https://github.com/mytracks/gpsloader) and moved to this
+repository on 2026-11-19 with its Git history. Requirements live in `openspec/`; the planning history up to the
+move, including the license check of every template, is in gpsloader under `openspec/changes/archive/`.
