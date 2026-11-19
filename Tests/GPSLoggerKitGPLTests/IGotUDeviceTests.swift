@@ -106,7 +106,7 @@ struct IGotUDeviceTests {
         return records
     }
 
-    /// Scenarios "GT-800 auslesen" and "USB-Modell auslesen".
+    /// Scenarios "Read a GT-800" and "Read a USB model".
     @Test(arguments: [IGotUDevice.Variant.serial, .hid])
     func reads(variant: IGotUDevice.Variant) async throws {
         let simulator = IGotUSimulator(variant: variant, records: Self.records())
@@ -119,7 +119,7 @@ struct IGotUDeviceTests {
         #expect(simulator.nmeaMode == 0)  // back to NMEA mode
     }
 
-    /// Scenario "Jahr modulo 16".
+    /// Scenario "Year modulo 16".
     @Test func yearReconstruction() {
         let r = ByteReader(bytes: igotuRecord(year: 2027))  // 2027 % 16 = 11 > 2026 % 16 = 10 → 2011
         #expect(IGotUDevice.time(r, 0, currentYear: 2026) == ISO8601DateFormatter().date(from: "2011-11-02T12:00:00Z"))
@@ -127,14 +127,14 @@ struct IGotUDeviceTests {
                 == ISO8601DateFormatter().date(from: "2026-11-02T12:00:00Z"))
     }
 
-    /// Scenario "Wenige Satelliten": the GT-800 needs more than 4 satellites, USB models more than 0.
+    /// Scenario "Few satellites": the GT-800 needs more than 4 satellites, USB models more than 0.
     @Test func satelliteThreshold() {
         let data = igotuRecord(satellites: 3)
         #expect(IGotUDevice.decode(data, count: 1, variant: .serial, reference: skyTraqReference).trackPointCount == 0)
         #expect(IGotUDevice.decode(data, count: 1, variant: .hid, reference: skyTraqReference).trackPointCount == 1)
     }
 
-    /// Scenario "Gerätefehler": a negative response size is retried.
+    /// Scenario "Device error": a negative response size is retried.
     @Test func deviceErrorIsRetried() async throws {
         let simulator = IGotUSimulator(variant: .serial, records: Self.records())
         simulator.deviceErrorOnce = true
@@ -147,7 +147,7 @@ struct IGotUDeviceTests {
         #expect(frame.count == 16 && frame.reduce(UInt8(0), &+) == 0 && frame[15] == 0x42)
     }
 
-    /// Scenario "Speicher löschen (experimentell)": used blocks are purged from the top down.
+    /// Scenario "Erase the memory (experimental)": used blocks are purged from the top down.
     @Test(arguments: [IGotUDevice.Variant.serial, .hid])
     func erase(variant: IGotUDevice.Variant) async throws {
         let simulator = IGotUSimulator(variant: variant, records: Self.records())  // 150 records = 2 blocks

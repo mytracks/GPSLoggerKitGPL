@@ -24,7 +24,7 @@ private struct LineProtocol: DeviceProtocol {
 
 @Suite("Device protocols")
 struct DeviceProtocolTests {
-    /// Spec `logger-kit-gpl`, "Simuliertes Gerät".
+    /// Spec `logger-kit-gpl`, "Simulated device".
     @Test func simulatedDevice() async throws {
         let device = SimulatedDevice { written, _ in
             written == Array("GET\r\n".utf8) ? Array("50.0,8.0\r\n50.1,8.1\r\nEND\r\n".utf8) : []
@@ -36,7 +36,7 @@ struct DeviceProtocolTests {
         #expect(LineProtocol().eraseSupport == .unsupported)
     }
 
-    /// Spec `logger-kit-gpl`, "Gemeinsame Schnittstelle": the drivers of this package fulfil the contract of GPSLoggerKit.
+    /// Spec `logger-kit-gpl`, "Shared interface": the drivers of this package fulfil the contract of GPSLoggerKit.
     @Test func driversUseTheContractOfGPSLoggerKit() {
         let drivers: [any GPSLoggerKit.DeviceProtocol] = [NavilinkDevice(), MagellanDevice(), ITrackUDevice(), IGotUDevice(variant: .serial)]
         #expect(drivers.map(\.eraseSupport) == [.unsupported, .unsupported, .unsupported, .experimental])

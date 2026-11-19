@@ -29,7 +29,7 @@ struct MTKTests {
         #expect(reader.f64le(5) == nil)
     }
 
-    /// Scenario "Datensatz eines iBlue 747".
+    /// Scenario "Record of an iBlue 747".
     @Test func iBlue747Record() throws {
         var dump = MTKTestDump(mask: Bit.basic)
         dump.record(Record(time: MTKTestDump.start))
@@ -44,7 +44,7 @@ struct MTKTests {
         #expect(result.warnings.isEmpty)
     }
 
-    /// Scenario "Millisekunden".
+    /// Scenario "Milliseconds".
     @Test func milliseconds() throws {
         var dump = MTKTestDump(mask: Bit.basic | Bit.millisecond)
         dump.record(Record(time: MTKTestDump.start, millisecond: 500))
@@ -52,7 +52,7 @@ struct MTKTests {
         #expect(try points(read(dump)).first?.time == start.addingTimeInterval(0.5))
     }
 
-    /// Scenario "Falsche Prüfsumme".
+    /// Scenario "Wrong checksum".
     @Test func wrongChecksum() throws {
         var dump = MTKTestDump(mask: Bit.basic)
         dump.record(Record(time: MTKTestDump.start))
@@ -78,7 +78,7 @@ struct MTKTests {
         #expect(points(result).map(\.time) == [start, start.addingTimeInterval(2)])
     }
 
-    /// Scenario "Drei Satelliten".
+    /// Scenario "Three satellites".
     @Test func satelliteData() throws {
         var dump = MTKTestDump(mask: Bit.basic | Bit.nsat | Bit.sid | Bit.elevation | Bit.azimuth | Bit.snr)
         dump.record(Record(time: MTKTestDump.start, satellitesUsed: 2, satellites: [(3, 1), (7, 1), (19, 0)]))
@@ -92,7 +92,7 @@ struct MTKTests {
         #expect(result.warnings.isEmpty)
     }
 
-    /// Scenario "Unsinnige Position".
+    /// Scenario "Nonsensical position".
     @Test func bogusPosition() throws {
         var dump = MTKTestDump(mask: Bit.basic)
         dump.record(Record(time: MTKTestDump.start, valid: 0x0001, latitude: 0, longitude: 0))
@@ -113,7 +113,7 @@ struct MTKTests {
         #expect(try points(read(dump)).first?.quality.fix == expected)
     }
 
-    /// Scenario "Zwei Blöcke".
+    /// Scenario "Two blocks".
     @Test func twoBlocks() throws {
         var dump = MTKTestDump(mask: Bit.basic)
         for k in 0..<3 { dump.record(Record(time: MTKTestDump.start + UInt32(k))) }
@@ -123,7 +123,7 @@ struct MTKTests {
         #expect(try points(read(dump)).count == 5)
     }
 
-    /// Scenario "Ungültiger erster Kopf".
+    /// Scenario "Invalid first header".
     @Test func invalidFirstHeader() throws {
         var dump = MTKTestDump(mask: Bit.basic | Bit.millisecond, policy: 0x0000)
         dump.mask = Bit.basic
@@ -135,7 +135,7 @@ struct MTKTests {
         #expect(result.warnings.isEmpty)
     }
 
-    /// Scenario "Neue Formatmaske".
+    /// Scenario "New format mask".
     @Test func newFormatMask() throws {
         var dump = MTKTestDump(mask: Bit.basic | Bit.millisecond)
         dump.record(Record(time: MTKTestDump.start, millisecond: 250))
@@ -148,7 +148,7 @@ struct MTKTests {
         #expect(result.warnings.isEmpty)
     }
 
-    /// Scenario "Logger zweimal eingeschaltet".
+    /// Scenario "Logger switched on twice".
     @Test func loggerSwitchedOnTwice() throws {
         var dump = MTKTestDump(mask: Bit.basic)
         dump.info(0x07, 0x0106)
@@ -162,7 +162,7 @@ struct MTKTests {
         #expect(result.recording.tracks.map(\.pointCount) == [2, 1])
     }
 
-    /// Scenario "Taste gedrückt".
+    /// Scenario "Button pressed".
     @Test func buttonPress() throws {
         var dump = MTKTestDump(mask: Bit.basic | Bit.rcr)
         dump.record(Record(time: MTKTestDump.start, rcr: 0x0001))
@@ -240,7 +240,7 @@ struct MTKTests {
 struct MTKDetectionTests {
     private let catalog = FormatCatalog.standard.adding(GPLFileFormats.all)
 
-    /// Scenario "Abbild eines iBlue 747".
+    /// Scenario "Image of an iBlue 747".
     @Test func mtkDump() {
         let prefix = Data(MTKTestDump.mtkFixture().bytes.prefix(4096))
         #expect(catalog.detect(prefix: prefix, fileName: "data.bin")?.id == .mtkBin)
@@ -250,13 +250,13 @@ struct MTKDetectionTests {
         #expect(catalog.detect(prefix: Data(plain.bytes.prefix(4096)), fileName: "data.bin")?.id == .mtkBin)
     }
 
-    /// Scenario "Abbild eines Holux M-241".
+    /// Scenario "Image of a Holux M-241".
     @Test func holuxDump() {
         let prefix = Data(MTKTestDump.m241Fixture().bytes.prefix(4096))
         #expect(catalog.detect(prefix: prefix, fileName: "data.bin")?.id == .m241Bin)
     }
 
-    /// Scenario "SkyTraq-Abbild" and the other way round.
+    /// Scenario "SkyTraq image" and the other way round.
     @Test func skyTraqAndMTKAreDistinct() {
         let skytraq = Data(SkyTraqTestDump.venus().bytes.prefix(4096))
         #expect(!MTKBinFileFormat().matches(prefix: skytraq) && !M241BinFileFormat().matches(prefix: skytraq))

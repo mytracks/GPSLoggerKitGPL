@@ -65,12 +65,12 @@ final class StepLog: @unchecked Sendable {
 
 @Suite("Magellan device")
 struct MagellanDeviceTests {
-    /// Scenario "Prüfsumme eines Befehls".
+    /// Scenario "Checksum of a command".
     @Test func commandChecksum() {
         #expect(MagellanSentences.command("PMGNCMD,VERSION") == Array("$PMGNCMD,VERSION*28\r\n".utf8))
     }
 
-    /// Scenarios "Meridian meldet sich" and "Auslesen".
+    /// Scenarios "Meridian answers" and "Reading".
     @Test func readsTrackAndWaypoints() async throws {
         let simulator = MagellanSimulator()
         let recording = try await MagellanDevice().read(device(simulator), DeviceReporter())
@@ -92,7 +92,7 @@ struct MagellanDeviceTests {
         #expect(!simulator.commands.contains("PMGNCMD,NMEAOFF"))
     }
 
-    /// Scenario "Unbekanntes Gerät".
+    /// Scenario "Unknown device".
     @Test func unknownProductID() async {
         let simulator = MagellanSimulator()
         simulator.productID = 99
@@ -102,7 +102,7 @@ struct MagellanDeviceTests {
         #expect(simulator.commands.last == "PMGNCMD,HANDOFF")
     }
 
-    /// Scenario "Falsche Baudrate".
+    /// Scenario "Wrong baud rate".
     @Test func badChecksumBeforeVersion() async {
         let simulator = MagellanSimulator()
         simulator.badChecksumBeforeVersion = true
@@ -111,7 +111,7 @@ struct MagellanDeviceTests {
         }
     }
 
-    /// Scenario "Gerät verstummt": the connection's timeout ends the operation.
+    /// Scenario "Device falls silent": the connection's timeout ends the operation.
     @Test func deviceFallsSilent() async {
         let simulator = MagellanSimulator()
         simulator.silentDuringTrack = true
@@ -120,7 +120,7 @@ struct MagellanDeviceTests {
         }
     }
 
-    /// Scenario "Keine Wegpunkte".
+    /// Scenario "No waypoints".
     @Test func noWaypoints() async throws {
         let simulator = MagellanSimulator()
         simulator.waypointsUnable = true

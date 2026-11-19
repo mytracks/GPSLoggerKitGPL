@@ -90,7 +90,7 @@ struct MTKDeviceTests {
         #expect(MTKDevice.sentence("PMTK182,6,1") == MTKDevice.logErase)
     }
 
-    /// Scenario "Auslesen": same recording as the dump decoder, logging enabled again.
+    /// Scenario "Reading": same recording as the dump decoder, logging enabled again.
     @Test func readsTheMemory() async throws {
         let dump = fullMemory()
         let simulator = MTKSimulator(memory: dump.bytes, usedBytes: 0x10300)
@@ -104,7 +104,7 @@ struct MTKDeviceTests {
         #expect(!progress.values.isEmpty)
     }
 
-    /// Scenario "Belegung unbekannt": the end of the data is found by scanning 64 KiB blocks.
+    /// Scenario "Usage unknown": the end of the data is found by scanning 64 KiB blocks.
     @Test func unknownUsage() async throws {
         let dump = fullMemory()
         let simulator = MTKSimulator(memory: dump.bytes, usedBytes: nil)
@@ -129,7 +129,7 @@ struct MTKDeviceTests {
         #expect(simulator.lines.contains("$PHLX810*35\r\n") && simulator.lines.contains("$PHLX827*31\r\n"))
     }
 
-    /// Scenario "Abgelehnter Block": a negative acknowledgement repeats the request.
+    /// Scenario "Refused block": a negative acknowledgement repeats the request.
     @Test func rejectedBlockIsRetried() async throws {
         let simulator = MTKSimulator(memory: MTKTestDump.mtkFixture().bytes, usedBytes: 0x300)
         simulator.rejectFirstRead = true
@@ -137,7 +137,7 @@ struct MTKDeviceTests {
         #expect(recording.trackPointCount == 4)  // block 0 of the fixture; its long 0xFF padding ends the download
     }
 
-    /// Scenario "Kein MTK-Logger".
+    /// Scenario "Not an MTK logger".
     @Test func notAnMTKLogger() async {
         let silent = SimulatedDevice { _, _ in Array("$GPRMC,noise*00\r\n".utf8) }
         await #expect(throws: DeviceProtocolError("This is not an MTK based logger (or it is switched off)")) {
@@ -145,7 +145,7 @@ struct MTKDeviceTests {
         }
     }
 
-    /// Scenario "Speicher löschen".
+    /// Scenario "Erase the memory".
     @Test func erase() async throws {
         let simulator = MTKSimulator(memory: [], usedBytes: 0)
         try await MTKDevice(model: .mtk).erase(connection(simulator), DeviceReporter())

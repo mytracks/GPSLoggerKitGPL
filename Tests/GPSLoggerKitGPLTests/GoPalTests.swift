@@ -41,7 +41,7 @@ enum GoPalTestFile {
 
 @Suite("GoPal tracks")
 struct GoPalTests {
-    /// Scenario "Zeile mit Datum".
+    /// Scenario "Line with date".
     @Test func lineWithDate() throws {
         let result = try read("3801444, 080558, 8.0, 50.0, 295.28, 36.0, 2, 2.9, 3, 20261102, 0, 0\n", name: "x.trk")
         let p = try #require(points(result).first)
@@ -51,20 +51,20 @@ struct GoPalTests {
         #expect(result.warnings.isEmpty)
     }
 
-    /// Scenario "Datum im Dateinamen", also for `A_…` names.
+    /// Scenario "Date in the file name", also for `A_…` names.
     @Test(arguments: ["track20261102_093000.trk", "A_20261102_093000.trk"])
     func dateFromFileName(name: String) throws {
         let result = try read(line9(0, "083000") + "\n" + line9(1_000_000, "083001", lat: 50.00001) + "\n", name: name)
         #expect(points(result).map(\.time) == [date("2026-11-02T08:30:00Z"), date("2026-11-02T08:30:01Z")])
     }
 
-    /// Scenario "Über Mitternacht".
+    /// Scenario "Over midnight".
     @Test func overMidnight() throws {
         let result = try read(line9(0, "235959") + "\n" + line9(2_000_000, "000001", lat: 50.00001) + "\n")
         #expect(points(result).map(\.time) == [date("2026-11-02T23:59:59Z"), date("2026-11-03T00:00:01Z")])
     }
 
-    /// Scenario "Kein Datum".
+    /// Scenario "No date".
     @Test func noDate() throws {
         let result = try read(line9(0, "083000") + "\n" + line9(1_000_000, "083001", lat: 50.00001) + "\n", name: "log.trk")
         #expect(points(result).count == 2)
@@ -72,7 +72,7 @@ struct GoPalTests {
         #expect(result.warnings == [ImportWarning(kind: .missingDate, count: 2, fileName: "log.trk")])
     }
 
-    /// Scenario "Sprung in den Daten" (also without a date, using the time of day).
+    /// Scenario "Jump in the data" (also without a date, using the time of day).
     @Test func jumpIsDropped() throws {
         let text = [line9(0, "080000"), line9(1_000_000, "080001", lat: 50.9), line9(2_000_000, "080002", lat: 50.00002)]
             .joined(separator: "\n")
@@ -87,7 +87,7 @@ struct GoPalTests {
         #expect(try points(read(text)).count == 1)
     }
 
-    /// Scenario "Track statt Route".
+    /// Scenario "Track instead of route".
     @Test func trackWithoutWaypoints() throws {
         let text = (0..<3).map { line9($0 * 1_000_000, "08000\($0)", lat: 50 + Double($0) * 0.00001) }.joined(separator: "\n")
         let result = try read(text, name: "track20261102_080000.trk")
@@ -115,7 +115,7 @@ struct GoPalTests {
         #expect(throws: CancellationError.self) { try result.get() }
     }
 
-    /// Spec `logger-kit-gpl`, "GoPal abfragen".
+    /// Spec `logger-kit-gpl`, "Query GoPal".
     @Test func catalog() throws {
         #expect(GPLFileFormats.all.contains { $0.id == .gopal && $0.fileExtensions == ["trk"] })
         #expect(try #require(GPLFileFormats.credits.first).authors.contains("Jürgen Neumann"))
@@ -126,13 +126,13 @@ struct GoPalTests {
 struct GoPalDetectionTests {
     private let catalog = FormatCatalog.standard.adding(GPLFileFormats.all)
 
-    /// Scenario "GoPal-Datei".
+    /// Scenario "GoPal file".
     @Test func detected() {
         #expect(catalog.detect(prefix: Data(GoPalTestFile.fixture().utf8), fileName: "a.trk")?.id == .gopal)
         #expect(catalog.detect(prefix: Data((line9(0, "080000") + "\n").utf8), fileName: "a.txt")?.id == .gopal)
     }
 
-    /// Scenario "Andere CSV-Datei" and other text formats.
+    /// Scenario "Other CSV file" and other text formats.
     @Test func otherTextFiles() {
         let samples = [
             "INDEX,TAG,DATE,TIME,LATITUDE N/S,LONGITUDE E/W,HEIGHT,SPEED,HEADING\r\n1,T,261102,120000,50.0N,008.0E,1,2,3\r\n",

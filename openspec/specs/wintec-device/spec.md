@@ -1,38 +1,38 @@
 # wintec-device Specification
 
 ## Purpose
-Liest und löscht Wintec WBT-100/200/201, G-Rays 2 und WSG-1000 über die serielle Schnittstelle, portiert aus gpsbabel 1.7.0, mit Erkennung des Gerätetyps.
+Reads and erases Wintec WBT-100/200/201, G-Rays 2 and WSG-1000 over the serial port, ported from gpsbabel 1.7.0, with detection of the device type.
 
 ## Requirements
 
-### Requirement: Gerätetyp erkennen
-Der Treiber SHALL den Gerätetyp in bis zu fünf Runden bestimmen: WBT-200, wenn auf `$PFST,NORMAL` bei 9600 Baud `$PFST` zurückkommt; WBT-201, wenn auf `@AL` bei 57600 Baud `@AL` zurückkommt; WSG-1000, wenn auf `@AL,2,3` die Antwort `@AL,2,3,OK` kommt. Antwortet keiner, MUST der Vorgang mit einem Protokollfehler enden.
+### Requirement: Detect the device type
+The driver SHALL determine the device type in up to five rounds: WBT-200 if `$PFST` comes back on `$PFST,NORMAL` at 9600 baud; WBT-201 if `@AL` comes back on `@AL` at 57600 baud; WSG-1000 if the answer to `@AL,2,3` is `@AL,2,3,OK`. If none answers, the operation MUST end with a protocol error.
 
-#### Scenario: Kein Wintec-Gerät
-- **WHEN** am Anschluss kein Gerät antwortet
-- **THEN** endet der Vorgang mit dem Hinweis, dass der Gerätetyp nicht bestimmt werden kann
+#### Scenario: No Wintec device
+- **WHEN** no device answers at the port
+- **THEN** the operation ends with the hint that the device type cannot be determined
 
-### Requirement: Auslesen WBT-100/200
-Beim WBT-200 SHALL der Treiber nach `$PFST,READLOGGER` einen Kopf von 6 Byte mit der Punktanzahl (Bytes 2–3 plus 1) lesen und danach die Datensätze, zuerst als 12-Byte-, sonst als 16-Byte-Datensätze, je nachdem, für welche Länge alle Zeitstempel gültig sind. Die Datensätze SHALL wie eine Datei `wbt-bin` dekodiert werden.
+### Requirement: Reading WBT-100/200
+For the WBT-200 the driver SHALL read, after `$PFST,READLOGGER`, a header of 6 bytes with the number of points (bytes 2–3 plus 1) and then the records, first as 12-byte, otherwise as 16-byte records, depending on for which length all timestamps are valid. The records SHALL be decoded like a `wbt-bin` file.
 
 #### Scenario: WBT-200
-- **WHEN** ein WBT-200 fünf Datensätze zu 16 Byte liefert, darunter einen Track-Beginn
-- **THEN** entstehen zwei Tracks mit zwei und drei Punkten und Höhen
+- **WHEN** a WBT-200 returns five records of 16 bytes, among them a track start
+- **THEN** two tracks with two and three points and elevations result
 
-### Requirement: Auslesen WBT-201 und WSG-1000
-Beim WBT-201 und WSG-1000 SHALL der Treiber Beginn und Ende der Aufzeichnung und des Speicherbereichs abfragen (`@AL,5,1`, `5,2`, `5,9`, `5,10`), den Bereich in Stücken bis 4 KiB lesen (`@AL,5,3,<Position>`) und jedes Stück an seiner XOR-Prüfsumme (`@AL,CS,…`) prüfen. Fehlerhafte Stücke SHALL er erneut anfordern, nach zehn Fehlern MUST der Vorgang enden. Liegt das Ende vor dem Beginn, SHALL er bis zum Ende des Bereichs und dann vom Anfang des Bereichs lesen.
+### Requirement: Reading WBT-201 and WSG-1000
+For the WBT-201 and WSG-1000 the driver SHALL query start and end of the recording and of the memory area (`@AL,5,1`, `5,2`, `5,9`, `5,10`), read the area in chunks of up to 4 KiB (`@AL,5,3,<position>`) and check every chunk by its XOR checksum (`@AL,CS,…`). It SHALL request faulty chunks again; after ten errors the operation MUST end. If the end lies before the start, it SHALL read up to the end of the area and then from the start of the area.
 
-#### Scenario: WBT-201 mit Prüfsumme
-- **WHEN** das erste Stück mit falscher Prüfsumme ankommt
-- **THEN** fordert der Treiber es erneut an und liefert alle Punkte
+#### Scenario: WBT-201 with checksum
+- **WHEN** the first chunk arrives with a wrong checksum
+- **THEN** the driver requests it again and returns all points
 
-#### Scenario: Überschriebener Ringpuffer
-- **WHEN** die Aufzeichnung über das Ende des Speicherbereichs hinaus fortgesetzt wurde
-- **THEN** liefert der Treiber die Punkte in der Reihenfolge der Aufzeichnung
+#### Scenario: Overwritten ring buffer
+- **WHEN** the recording continued beyond the end of the memory area
+- **THEN** the driver returns the points in the order of recording
 
-### Requirement: Speicher löschen
-Der Treiber SHALL beim WBT-200 die Dateien 27 bis 31 entfernen und die Bereiche 0 bis 3 freigeben, beim WBT-201 und WSG-1000 `@AL,5,6` senden.
+### Requirement: Erase the memory
+For the WBT-200 the driver SHALL remove the files 27 to 31 and free the areas 0 to 3, for the WBT-201 and WSG-1000 it SHALL send `@AL,5,6`.
 
-#### Scenario: Speicher löschen
-- **WHEN** der Anwender das Löschen bestätigt
-- **THEN** sendet der Treiber die Löschbefehle des erkannten Gerätetyps
+#### Scenario: Erase the memory
+- **WHEN** the user confirms erasing
+- **THEN** the driver sends the erase commands of the detected device type

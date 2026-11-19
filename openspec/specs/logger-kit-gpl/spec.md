@@ -1,131 +1,131 @@
 # logger-kit-gpl Specification
 
 ## Purpose
-GPSLoggerKitGPL ist das Swift-Paket (GPL-3.0-or-later) für Dateiformate und Logger-Protokolle, die aus Quelltext unter der GPL oder einer damit vereinbaren Lizenz portiert werden. Es ergänzt das MIT-lizenzierte GPSLoggerKit, ohne dessen Clean-Room-Regel zu berühren.
+GPSLoggerKitGPL is the Swift package (GPL-3.0-or-later) for file formats and logger protocols ported from source code under the GPL or a license compatible with it. It complements the MIT-licensed GPSLoggerKit without touching its clean-room rule.
 
 ## Requirements
 
-### Requirement: Lizenz des Pakets
-Das Paket MUST unter der GNU GPL Version 3 oder später (GPL-3.0-or-later) stehen und den vollständigen Lizenztext als Lizenzdatei enthalten. Die README des Pakets SHALL die Lizenz nennen und erklären, dass jede App, die das Paket einbindet, als Ganzes unter die GPL fällt.
+### Requirement: License of the package
+The package MUST be licensed under the GNU GPL version 3 or later (GPL-3.0-or-later) and contain the complete license text as a license file. The README of the package SHALL name the license and explain that every app that uses the package is covered by the GPL as a whole.
 
-#### Scenario: Lizenzdatei
-- **WHEN** der Ordner des Pakets untersucht wird
-- **THEN** enthält er eine Lizenzdatei mit dem Text der GPL Version 3, und die README nennt GPL-3.0-or-later
+#### Scenario: License file
+- **WHEN** the folder of the package is examined
+- **THEN** it contains a license file with the text of the GPL version 3, and the README names GPL-3.0-or-later
 
-### Requirement: Plattform und Abhängigkeiten
-Das Paket MUST unter macOS ab Version 12 bauen und laufen. Es MUST nur von GPSLoggerKit, eingebunden per Repository-URL und veröffentlichter Version, und den Systembibliotheken abhängen, nicht von GPSLoaderKit, der App oder Paketen von Drittanbietern. GPSLoggerKit MUST umgekehrt nicht von diesem Paket abhängen.
+### Requirement: Platform and dependencies
+The package MUST build and run on macOS 12 and later. It MUST depend only on GPSLoggerKit, used by repository URL and published version, and on the system libraries, not on GPSLoaderKit, the app or third-party packages. Conversely, GPSLoggerKit MUST NOT depend on this package.
 
-#### Scenario: Bauen mit GPSLoggerKit allein
-- **WHEN** dieses Repository frisch geklont und dort gebaut und getestet wird
-- **THEN** löst der Swift Package Manager nur GPSLoggerKit in einer veröffentlichten Version auf, und Build und Tests gelingen
+#### Scenario: Build with GPSLoggerKit alone
+- **WHEN** this repository is freshly cloned and built and tested there
+- **THEN** the Swift Package Manager resolves only GPSLoggerKit in a published version, and build and tests succeed
 
-#### Scenario: Keine Rückabhängigkeit
-- **WHEN** GPSLoggerKit allein gebaut wird
-- **THEN** gelingt der Build, ohne dass das GPL-Paket vorhanden ist
+#### Scenario: No reverse dependency
+- **WHEN** GPSLoggerKit is built alone
+- **THEN** the build succeeds without the GPL package being present
 
-### Requirement: Formatkatalog des Pakets
-Das Paket SHALL einen eigenen Katalog seiner Formate bereitstellen, der sich mit dem Katalog von GPSLoggerKit zusammensetzen lässt. Jedes Format SHALL eine feste Kennung, einen lokalisierten Namen auf Deutsch und Englisch und die typischen Dateiendungen haben. Eine Kennung MUST sich von allen Kennungen in GPSLoggerKit unterscheiden. Der Katalog darf leer sein.
+### Requirement: Format catalog of the package
+The package SHALL provide a catalog of its formats of its own that can be combined with the catalog of GPSLoggerKit. Every format SHALL have a fixed identifier, a localized name in German and English and the typical file extensions. An identifier MUST differ from all identifiers in GPSLoggerKit. The catalog may be empty.
 
-#### Scenario: Leerer Katalog
-- **WHEN** das Paket noch kein Format enthält und eine App seinen Katalog mit dem von GPSLoggerKit zusammensetzt
-- **THEN** enthält das Ergebnis genau die Formate von GPSLoggerKit
+#### Scenario: Empty catalog
+- **WHEN** the package contains no format yet and an app combines its catalog with that of GPSLoggerKit
+- **THEN** the result contains exactly the formats of GPSLoggerKit
 
-#### Scenario: Eindeutige Kennungen
-- **WHEN** die Tests des Pakets laufen
-- **THEN** prüft ein Test, dass keine Kennung des Pakets auch in GPSLoggerKit vorkommt
+#### Scenario: Unique identifiers
+- **WHEN** the tests of the package run
+- **THEN** a test checks that no identifier of the package also occurs in GPSLoggerKit
 
-### Requirement: Zulässige Quellen
-Portierter Code MUST aus Quellen stammen, deren Lizenz mit GPL-3.0-or-later vereinbar ist. Dazu gehören GPL Version 2 oder später, GPL Version 3, LGPL Version 2.1 oder später, CC BY-SA 4.0 sowie freizügige Lizenzen wie MIT, BSD, Apache 2.0 und Public Domain. Quellen unter GPL nur Version 2, unter CC BY-SA bis Version 3.0, unter eigenen Lizenzen oder ohne erkennbare Lizenz MUST NOT verwendet werden, solange die Urheber keine vereinbare Lizenz erteilen.
+### Requirement: Permitted sources
+Ported code MUST come from sources whose license is compatible with GPL-3.0-or-later. These include GPL version 2 or later, GPL version 3, LGPL version 2.1 or later, CC BY-SA 4.0 and permissive licenses such as MIT, BSD, Apache 2.0 and public domain. Sources under GPL version 2 only, under CC BY-SA up to version 3.0, under licenses of their own or without a recognizable license MUST NOT be used as long as the authors grant no compatible license.
 
-#### Scenario: Quelle nur unter GPLv2
-- **WHEN** eine Vorlage ausschließlich unter der GPL Version 2 steht
-- **THEN** wird sie nicht portiert, und das Design der Familie nennt den Grund
+#### Scenario: Source under GPLv2 only
+- **WHEN** a template is licensed exclusively under the GPL version 2
+- **THEN** it is not ported, and the design of the family names the reason
 
-#### Scenario: Eigene Lizenz der Vorlage
-- **WHEN** eine Vorlage eine eigene Lizenz hat, die keine vereinbare Lizenz ausdrücklich erteilt
-- **THEN** wird sie nicht portiert, und die Familie wird aus Black-Box-Beobachtung umgesetzt
+#### Scenario: License of its own
+- **WHEN** a template has a license of its own that does not explicitly grant a compatible license
+- **THEN** it is not ported, and the family is implemented from black-box observation
 
-### Requirement: Herkunft portierter Formate
-Für jedes Format MUST die Herkunftsliste des Pakets die Vorlagen nennen: Projekt, Datei, Version oder Commit, Urheber und Lizenz. Sie MUST auch eigene Ergänzungen, Spezifikationen und Black-Box-Beobachtungen nennen. Jede aus einer Vorlage portierte Quelldatei MUST einen Kopf mit den Urheberhinweisen und der Lizenz der Vorlage und dem Hinweis auf Übersetzung und Veränderung mit Datum tragen; neue Dateien nennen dabei GPSLoggerKitGPL.
+### Requirement: Provenance of ported formats
+For every format the provenance list of the package MUST name the templates: project, file, version or commit, authors and license. It MUST also name own additions, specifications and black-box observations. Every source file ported from a template MUST carry a header with the copyright notices and the license of the template and the note on translation and modification with the date; new files name GPSLoggerKitGPL there.
 
-#### Scenario: Neues Format
-- **WHEN** ein Format zum Katalog des Pakets hinzukommt
-- **THEN** führt die Herkunftsliste dieses Format mit seinen Vorlagen auf, und ein Test schlägt fehl, solange der Eintrag fehlt
+#### Scenario: New format
+- **WHEN** a format is added to the catalog of the package
+- **THEN** the provenance list lists this format with its templates, and a test fails as long as the entry is missing
 
-#### Scenario: Portierte Datei
-- **WHEN** eine Quelldatei aus einer Vorlage übersetzt wurde
-- **THEN** nennt ihr Kopf die Urheber der Vorlage, deren Lizenz und die Übersetzung und Veränderung mit Datum, bei neuen Dateien „for GPSLoggerKitGPL“
+#### Scenario: Ported file
+- **WHEN** a source file was translated from a template
+- **THEN** its header names the authors of the template, its license and the translation and modification with the date, for new files "for GPSLoggerKitGPL"
 
-### Requirement: Trennung von GPSLoggerKit
-Eine Logger-Familie SHALL entweder in GPSLoggerKit (Clean-Room) oder in diesem Paket (Portierung) umgesetzt werden, nicht in beiden. Wurde für eine Familie Quelltext unter einer Copyleft-Lizenz gelesen, MUST sie in diesem Paket bleiben. Die Zuordnung jeder Familie MUST im Projektkontext festgehalten sein.
+### Requirement: Separation from GPSLoggerKit
+A logger family SHALL be implemented either in GPSLoggerKit (clean-room) or in this package (port), not in both. If source code under a copyleft license was read for a family, it MUST stay in this package. The assignment of every family MUST be recorded in the project context.
 
-#### Scenario: Familie mit gelesenem GPL-Quelltext
-- **WHEN** für eine Familie gpsbabel-Quelltext gelesen wurde
-- **THEN** gibt es für diese Familie keinen Code in GPSLoggerKit, und der Projektkontext ordnet sie GPSLoggerKitGPL zu
+#### Scenario: Family with GPL source code read
+- **WHEN** gpsbabel source code was read for a family
+- **THEN** there is no code for this family in GPSLoggerKit, and the project context assigns it to GPSLoggerKitGPL
 
-### Requirement: Katalog portierter Formate
-Der Katalog des Pakets SHALL jedes portierte Format genau einmal enthalten, in der Reihenfolge, in der die Formate aufgenommen wurden. Zu jeder Vorlage SHALL `credits` einen Eintrag mit Projekt, Urhebern, Lizenz und Bezugsquelle des Quellcodes der verwendeten Version enthalten.
+### Requirement: Catalog of ported formats
+The catalog of the package SHALL contain every ported format exactly once, in the order in which the formats were added. For every template `credits` SHALL contain an entry with project, authors, license and the source of the code of the version used.
 
-#### Scenario: SkyTraq im Katalog
-- **WHEN** eine App den Katalog des Pakets abfragt
-- **THEN** enthält er das Format `skytraq-bin` (Endung `bin`), und `credits` nennt gpsbabel mit der Lizenz GPL-2.0-or-later und der Adresse des Tags `gpsbabel_1_7_0`
+#### Scenario: SkyTraq in the catalog
+- **WHEN** an app queries the catalog of the package
+- **THEN** it contains the format `skytraq-bin` (extension `bin`), and `credits` names gpsbabel with the license GPL-2.0-or-later and the address of the tag `gpsbabel_1_7_0`
 
-### Requirement: MTK im Katalog
-Der Katalog des Pakets SHALL die Formate `mtk-bin` und `m241-bin` (Endung `bin`) enthalten. Der Eintrag für gpsbabel in `credits` SHALL auch die Urheber der Vorlage `mtk_logger.cc` nennen.
+### Requirement: MTK in the catalog
+The catalog of the package SHALL contain the formats `mtk-bin` and `m241-bin` (extension `bin`). The entry for gpsbabel in `credits` SHALL also name the authors of the template `mtk_logger.cc`.
 
-#### Scenario: MTK-Formate abfragen
-- **WHEN** eine App den Katalog des Pakets abfragt
-- **THEN** enthält er `mtk-bin` und `m241-bin`, und der gpsbabel-Eintrag in `credits` nennt Per Borgentun
+#### Scenario: Query the MTK formats
+- **WHEN** an app queries the catalog of the package
+- **THEN** it contains `mtk-bin` and `m241-bin`, and the gpsbabel entry in `credits` names Per Borgentun
 
-### Requirement: Wintec im Katalog
-Der Katalog des Pakets SHALL die Formate `wintec-tes` (Endung `tes`), `wbt-bin` (Endung `bin`) und `wbt-tk1` (Endung `tk1`) enthalten. Der Eintrag für gpsbabel in `credits` SHALL auch Robert Lipe als Urheber der Vorlage `wintec_tes.cc` nennen.
+### Requirement: Wintec in the catalog
+The catalog of the package SHALL contain the formats `wintec-tes` (extension `tes`), `wbt-bin` (extension `bin`) and `wbt-tk1` (extension `tk1`). The entry for gpsbabel in `credits` SHALL also name Robert Lipe as the author of the template `wintec_tes.cc`.
 
-#### Scenario: Wintec-Formate abfragen
-- **WHEN** eine App den Katalog des Pakets abfragt
-- **THEN** enthält er `wintec-tes`, `wbt-bin` und `wbt-tk1`, und der gpsbabel-Eintrag nennt Robert Lipe
+#### Scenario: Query the Wintec formats
+- **WHEN** an app queries the catalog of the package
+- **THEN** it contains `wintec-tes`, `wbt-bin` and `wbt-tk1`, and the gpsbabel entry names Robert Lipe
 
-### Requirement: Locosys im Katalog
-Der Katalog des Pakets SHALL die Formate `sbp` (Endung `sbp`) und `sbn` (Endung `sbn`) enthalten. Der Eintrag für gpsbabel in `credits` SHALL auch Rodney Lorrimar und Tom Hughes nennen.
+### Requirement: Locosys in the catalog
+The catalog of the package SHALL contain the formats `sbp` (extension `sbp`) and `sbn` (extension `sbn`). The entry for gpsbabel in `credits` SHALL also name Rodney Lorrimar and Tom Hughes.
 
-#### Scenario: Locosys-Formate abfragen
-- **WHEN** eine App den Katalog des Pakets abfragt
-- **THEN** enthält er `sbp` und `sbn`, und der gpsbabel-Eintrag nennt Rodney Lorrimar
+#### Scenario: Query the Locosys formats
+- **WHEN** an app queries the catalog of the package
+- **THEN** it contains `sbp` and `sbn`, and the gpsbabel entry names Rodney Lorrimar
 
-### Requirement: GoPal im Katalog
-Der Katalog des Pakets SHALL das Format `gopal` (Endung `trk`) enthalten. Der Eintrag für gpsbabel in `credits` SHALL auch Jürgen Neumann nennen.
+### Requirement: GoPal in the catalog
+The catalog of the package SHALL contain the format `gopal` (extension `trk`). The entry for gpsbabel in `credits` SHALL also name Jürgen Neumann.
 
-#### Scenario: GoPal abfragen
-- **WHEN** eine App den Katalog des Pakets abfragt
-- **THEN** enthält er `gopal`, und der gpsbabel-Eintrag nennt Jürgen Neumann
+#### Scenario: Query GoPal
+- **WHEN** an app queries the catalog of the package
+- **THEN** it contains `gopal`, and the gpsbabel entry names Jürgen Neumann
 
-### Requirement: Geräteprotokolle
-Die Geräteprotokolle des Pakets SHALL die Geräteschnittstelle aus GPSLoggerKit nutzen (Verbindung: schreiben, lesen mit Zeitlimit, bis zu einem Endezeichen lesen, Eingang verwerfen, Baudrate wechseln; Treibervertrag: auslesen, löschen, Fortschritt). Eine eigene Schnittstelle SHALL das Paket nicht mehr bereitstellen. Es SHALL dafür von nichts außer GPSLoggerKit abhängen. Jeder Treiber SHALL ohne Hardware gegen ein simuliertes Gerät testbar sein.
+### Requirement: Device protocols
+The device protocols of the package SHALL use the device interface from GPSLoggerKit (connection: write, read with a time limit, read up to a terminator, discard input, change the baud rate; driver contract: read, erase, progress). The package SHALL NOT provide an interface of its own anymore. It SHALL depend on nothing but GPSLoggerKit for this. Every driver SHALL be testable without hardware against a simulated device.
 
-#### Scenario: Simuliertes Gerät
-- **WHEN** ein Test einen Treiber mit einer simulierten Verbindung ausführt
-- **THEN** läuft er ohne seriellen Anschluss und liefert die Aufzeichnung des simulierten Geräts
+#### Scenario: Simulated device
+- **WHEN** a test runs a driver with a simulated connection
+- **THEN** it runs without a serial port and returns the recording of the simulated device
 
-#### Scenario: Gemeinsame Schnittstelle
-- **WHEN** eine App Treiber aus GPSLoggerKit und aus GPSLoggerKitGPL verwendet
-- **THEN** erfüllen beide denselben Treibervertrag aus GPSLoggerKit
+#### Scenario: Shared interface
+- **WHEN** an app uses drivers from GPSLoggerKit and from GPSLoggerKitGPL
+- **THEN** both fulfil the same driver contract from GPSLoggerKit
 
-### Requirement: igotu2gpx in den Credits
-`credits` SHALL igotu2gpx mit Michael Hofmann, der Lizenz GPL-3.0-or-later und der Adresse der Version 0.3.0 nennen.
+### Requirement: igotu2gpx in the credits
+`credits` SHALL name igotu2gpx with Michael Hofmann, the license GPL-3.0-or-later and the address of version 0.3.0.
 
-#### Scenario: Credits mit igotu2gpx
-- **WHEN** das Über-Fenster die portierten Formate und Protokolle auflistet
-- **THEN** erscheinen GPSBabel und igotu2gpx
+#### Scenario: Credits with igotu2gpx
+- **WHEN** the About window lists the ported formats and protocols
+- **THEN** GPSBabel and igotu2gpx appear
 
-### Requirement: Magellan im Katalog
-Der Katalog des Pakets SHALL das Format `magellan` mit den Endungen `log`, `upt` und `rte` enthalten.
+### Requirement: Magellan in the catalog
+The catalog of the package SHALL contain the format `magellan` with the extensions `log`, `upt` and `rte`.
 
-#### Scenario: Magellan-Format abfragen
-- **WHEN** eine App den Katalog des Pakets abfragt
-- **THEN** enthält er `magellan` mit den Endungen `log`, `upt` und `rte`
+#### Scenario: Query the Magellan format
+- **WHEN** an app queries the catalog of the package
+- **THEN** it contains `magellan` with the extensions `log`, `upt` and `rte`
 
-### Requirement: Alan Map500 im Katalog
-Der Katalog des Pakets SHALL das Format `alantrl` (Endung `trl`) enthalten. Der Eintrag für gpsbabel in `credits` SHALL auch Gunar Megger nennen.
+### Requirement: Alan Map500 in the catalog
+The catalog of the package SHALL contain the format `alantrl` (extension `trl`). The entry for gpsbabel in `credits` SHALL also name Gunar Megger.
 
-#### Scenario: Alan-Format abfragen
-- **WHEN** eine App den Katalog des Pakets abfragt
-- **THEN** enthält er `alantrl`, und der gpsbabel-Eintrag nennt Gunar Megger
+#### Scenario: Query the Alan format
+- **WHEN** an app queries the catalog of the package
+- **THEN** it contains `alantrl`, and the gpsbabel entry names Gunar Megger

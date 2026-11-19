@@ -83,7 +83,7 @@ private func connection(_ simulator: NavilinkSimulator) -> SimulatedDevice {
 
 @Suite("Navilink device")
 struct NavilinkDeviceTests {
-    /// Scenario "Auslesen": 40 waypoints (two requests) and 600 track points (two requests, each acknowledged).
+    /// Scenario "Reading": 40 waypoints (two requests) and 600 track points (two requests, each acknowledged).
     @Test func readsWaypointsAndTrack() async throws {
         let simulator = NavilinkSimulator(waypoints: 40, trackpoints: 600)
         let recording = try await NavilinkDevice().read(connection(simulator), DeviceReporter())
@@ -103,7 +103,7 @@ struct NavilinkDeviceTests {
         #expect(NavilinkLink.packet(0xD6) == [0xA0, 0xA2, 0x01, 0x00, 0xD6, 0xD6, 0x00, 0xB0, 0xB3])
     }
 
-    /// Scenario "Nicht im NAVILINK-Modus".
+    /// Scenario "Not in NAVILINK mode".
     @Test func notInNavilinkMode() async {
         let nmea = SimulatedDevice { _, _ in Array("$GPRMC,120000,A*00\r\n".utf8) }
         await #expect(throws: DeviceProtocolError("Bad packet header. Is the device in NAVILINK mode?")) {
@@ -111,7 +111,7 @@ struct NavilinkDeviceTests {
         }
     }
 
-    /// Scenario "Prüfsummenfehler".
+    /// Scenario "Checksum error".
     @Test func checksumError() async {
         let simulator = NavilinkSimulator(waypoints: 1, trackpoints: 1)
         simulator.corruptChecksum = true

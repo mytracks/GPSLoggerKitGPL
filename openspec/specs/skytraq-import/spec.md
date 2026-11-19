@@ -1,88 +1,88 @@
 # skytraq-import Specification
 
 ## Purpose
-Liest Speicherabbilder von SkyTraq-Venus-Loggern (skytraq-bin), portiert aus gpsbabel 1.7.0. Aus vollen, komprimierten und hochfrequenten Einträgen entstehen Tracks, aus Markierungen Wegpunkte.
+Reads memory images of SkyTraq Venus loggers (skytraq-bin), ported from gpsbabel 1.7.0. Full, compressed and high-rate entries become tracks, markers become waypoints.
 
 ## Requirements
 
-### Requirement: Sektoren
-Der Import SHALL ein SkyTraq-Speicherabbild in Sektoren zu 4096 Byte lesen; ein kürzerer letzter Sektor SHALL ebenfalls gelesen werden. In jedem Sektor SHALL er Einträge lesen, bis der Sektor endet oder ein Byte `0xFF` den Rest als leer kennzeichnet. Endet ein Sektor auf diese Weise mehr als 18 Byte vor seinem Ende, SHALL der Import das Abbild dort beenden; folgende Sektoren gelten als leer.
+### Requirement: Sectors
+The import SHALL read a SkyTraq memory image in sectors of 4096 bytes; a shorter last sector SHALL be read as well. In every sector it SHALL read entries until the sector ends or a byte `0xFF` marks the rest as empty. If a sector ends this way more than 18 bytes before its end, the import SHALL end the image there; following sectors count as empty.
 
-#### Scenario: Leerer Sektor beendet das Abbild
-- **WHEN** der zweite Sektor nur `0xFF` enthält und der dritte wieder Einträge
-- **THEN** stammen alle Punkte aus dem ersten Sektor
+#### Scenario: Empty sector ends the image
+- **WHEN** the second sector contains only `0xFF` and the third contains entries again
+- **THEN** all points come from the first sector
 
-#### Scenario: Voller Sektor
-- **WHEN** ein Sektor bis auf weniger als 18 Byte mit Einträgen gefüllt ist
-- **THEN** liest der Import auch den folgenden Sektor
+#### Scenario: Full sector
+- **WHEN** a sector is filled with entries to less than 18 bytes from its end
+- **THEN** the import also reads the following sector
 
-### Requirement: Volle Einträge
-Ein Eintrag vom Typ `0x4` (oberes Halbbyte des ersten Bytes) SHALL als voller Positionsdatensatz mit 18 Byte gelesen werden: Geschwindigkeit in km/h aus den unteren 4 Bit des ersten und dem zweiten Byte, danach Zeit sowie die ECEF-Koordinaten X, Y und Z in Metern als vorzeichenbehaftete 32-Bit-Werte in der Byte-Reihenfolge der Vorlage. Aus der Zeit SHALL die GPS-Woche (untere 10 Bit) und die Sekunde der Woche (Bits ab 12) folgen.
+### Requirement: Full entries
+An entry of type `0x4` (upper nibble of the first byte) SHALL be read as a full position record of 18 bytes: speed in km/h from the lower 4 bits of the first and the second byte, then time and the ECEF coordinates X, Y and Z in meters as signed 32-bit values in the byte order of the template. The GPS week (lower 10 bits) and the second of the week (bits from 12) SHALL follow from the time.
 
-#### Scenario: Zeit eines vollen Eintrags
-- **WHEN** das Zeitfeld eines vollen Eintrags die Woche 380 und die Sekunde 302 400 enthält
-- **THEN** hat der Punkt die GPS-Woche 380 und die Sekunde 302 400 der Woche
+#### Scenario: Time of a full entry
+- **WHEN** the time field of a full entry contains the week 380 and the second 302,400
+- **THEN** the point has the GPS week 380 and the second 302,400 of the week
 
-### Requirement: Umrechnung von ECEF
-Die ECEF-Koordinaten voller und komprimierter Einträge SHALL nach WGS 84 in Breite, Länge und Höhe über dem Ellipsoid umgerechnet werden.
+### Requirement: Conversion from ECEF
+The ECEF coordinates of full and compressed entries SHALL be converted according to WGS 84 to latitude, longitude and height above the ellipsoid.
 
-#### Scenario: Position aus ECEF
-- **WHEN** ein voller Eintrag die ECEF-Koordinaten einer Position bei 50,0° Nord, 8,0° Ost und 100 m Höhe enthält
-- **THEN** entsteht ein Punkt mit dieser Position auf 0,00001° und 1 m genau und mit der Geschwindigkeit des Eintrags in m/s
+#### Scenario: Position from ECEF
+- **WHEN** a full entry contains the ECEF coordinates of a position at 50.0° north, 8.0° east and 100 m height
+- **THEN** a point results with this position to 0.00001° and 1 m and with the speed of the entry in m/s
 
-### Requirement: Komprimierte Einträge
-Ein Eintrag vom Typ `0x8` SHALL als komprimierter Datensatz mit 8 Byte gelesen werden: Geschwindigkeit wie beim vollen Eintrag, ein Zeitabstand in Sekunden (16 Bit, Big Endian) und drei Positionsänderungen zu je 10 Bit. Werte über 511 SHALL als negativ gelten (511 minus Wert). Zeit und ECEF-Koordinaten SHALL vom vorherigen Eintrag aus fortgeschrieben werden.
+### Requirement: Compressed entries
+An entry of type `0x8` SHALL be read as a compressed record of 8 bytes: speed as with the full entry, a time difference in seconds (16 bit, big endian) and three position changes of 10 bits each. Values above 511 SHALL count as negative (511 minus value). Time and ECEF coordinates SHALL be continued from the previous entry.
 
-#### Scenario: Fortgeschriebene Position
-- **WHEN** auf einen vollen Eintrag ein komprimierter mit Zeitabstand 5 und den Änderungen +3, -2 und +1 m folgt
-- **THEN** liegt der zweite Punkt 5 Sekunden nach dem ersten, an der um diese Werte verschobenen ECEF-Position
+#### Scenario: Continued position
+- **WHEN** a full entry is followed by a compressed one with time difference 5 and the changes +3, −2 and +1 m
+- **THEN** the second point lies 5 seconds after the first, at the ECEF position shifted by these values
 
-### Requirement: Einträge mit hoher Rate
-Ein Eintrag vom Typ `0x2` SHALL als Datensatz mit 20 Byte gelesen werden: GPS-Woche aus den unteren 2 Bit des ersten und dem zweiten Byte, Geschwindigkeit in km/h (16 Bit), Zeit in Millisekunden der Woche (untere 30 Bit), Breite und Länge in Einheiten von 2⁻²⁰ Grad und Höhe in Einheiten von 2⁻⁷ m. Die Millisekunden SHALL erhalten bleiben.
+### Requirement: High-rate entries
+An entry of type `0x2` SHALL be read as a record of 20 bytes: GPS week from the lower 2 bits of the first and the second byte, speed in km/h (16 bit), time in milliseconds of the week (lower 30 bits), latitude and longitude in units of 2⁻²⁰ degrees and height in units of 2⁻⁷ m. The milliseconds SHALL be kept.
 
-#### Scenario: Zehn Punkte pro Sekunde
-- **WHEN** zwei Einträge mit hoher Rate 100 ms auseinander liegen
-- **THEN** unterscheiden sich die Zeiten der beiden Punkte um 0,1 s
+#### Scenario: Ten points per second
+- **WHEN** two high-rate entries lie 100 ms apart
+- **THEN** the times of the two points differ by 0.1 s
 
-### Requirement: Markierungen
-Einträge vom Typ `0x6` (wie voll) und `0xC` (wie hohe Rate) SHALL als Markierungen (POI) gelesen werden: Sie SHALL einen Trackpunkt und zusätzlich einen Wegpunkt mit Position, Zeit und Höhe des Punkts ergeben. Die Wegpunkte SHALL `POI` gefolgt von ihrer laufenden Nummer im Abbild heißen.
+### Requirement: Markers
+Entries of type `0x6` (like full) and `0xC` (like high rate) SHALL be read as markers (POI): they SHALL result in a track point and additionally in a waypoint with position, time and elevation of the point. The waypoints SHALL be named `POI` followed by their running number in the image.
 
-#### Scenario: Taste gedrückt
-- **WHEN** das Abbild nach zwei vollen Einträgen einen Eintrag vom Typ `0x6` enthält
-- **THEN** entstehen drei Trackpunkte und ein Wegpunkt `POI 1` an der Position des dritten
+#### Scenario: Button pressed
+- **WHEN** the image contains an entry of type `0x6` after two full entries
+- **THEN** three track points and a waypoint `POI 1` at the position of the third result
 
-### Requirement: Zeit
-Die Zeit eines Punkts SHALL aus GPS-Woche und Sekunde der Woche ab dem 6. Januar 1980 berechnet und mit den Schaltsekunden bis einschließlich 2017 (GPS minus UTC = 18 s) nach UTC umgerechnet werden. Weil die Woche nur 10 Bit hat, SHALL der Import den Wochenzyklus wählen, der die Zeit in die 1024 Wochen bis zum Zeitpunkt des Lesens legt.
+### Requirement: Time
+The time of a point SHALL be computed from GPS week and second of the week from 6 January 1980 and converted to UTC with the leap seconds up to and including 2017 (GPS minus UTC = 18 s). Because the week has only 10 bits, the import SHALL choose the week cycle that puts the time into the 1024 weeks up to the time of reading.
 
-#### Scenario: Aktueller Wochenzyklus
-- **WHEN** ein Eintrag die GPS-Woche 380 und die Sekunde 302 400 enthält und das Abbild im November 2026 gelesen wird
-- **THEN** hat der Punkt die Zeit 2026-07-22T11:59:42Z (GPS-Woche 2428)
+#### Scenario: Current week cycle
+- **WHEN** an entry contains the GPS week 380 and the second 302,400 and the image is read in November 2026
+- **THEN** the point has the time 2026-07-22T11:59:42Z (GPS week 2428)
 
-### Requirement: Fehlerhafte Abbilder
-Ein Eintrag mit unbekanntem Typ oder ein Eintrag, der über das Ende des Sektors hinausreicht, SHALL das Lesen des Abbilds an dieser Stelle beenden. Die bis dahin gelesenen Punkte SHALL erhalten bleiben, und eine Warnung SHALL das abgeschnittene Abbild melden. Ein komprimierter Eintrag ohne vorherigen vollen Eintrag SHALL verworfen und als Warnung gezählt werden.
+### Requirement: Faulty images
+An entry with an unknown type or an entry that reaches beyond the end of the sector SHALL end reading the image at this place. The points read until then SHALL be kept, and a warning SHALL report the truncated image. A compressed entry without a previous full entry SHALL be discarded and counted as a warning.
 
-#### Scenario: Unbekannter Eintrag
-- **WHEN** nach drei gültigen Einträgen ein Byte mit dem Typ `0x1` folgt
-- **THEN** enthält der Track drei Punkte, und eine Warnung meldet das abgeschnittene Abbild
+#### Scenario: Unknown entry
+- **WHEN** three valid entries are followed by a byte with the type `0x1`
+- **THEN** the track contains three points, and a warning reports the truncated image
 
-#### Scenario: Komprimierter Eintrag am Anfang
-- **WHEN** das Abbild mit einem komprimierten Eintrag beginnt
-- **THEN** entsteht daraus kein Punkt, und eine Warnung zählt den verworfenen Datensatz
+#### Scenario: Compressed entry at the start
+- **WHEN** the image starts with a compressed entry
+- **THEN** no point results from it, and a warning counts the discarded record
 
 ### Requirement: Track
-Jedes Abbild SHALL einen Track mit einem Segment ergeben, der nach der Datei ohne Endung heißt. Mehrere Abbilder SHALL mehrere Tracks in der Reihenfolge der Übergabe ergeben.
+Every image SHALL result in one track with one segment, named after the file without extension. Several images SHALL result in several tracks in the order in which they were passed.
 
-#### Scenario: Abbild aus gpsbabel
-- **WHEN** die Datei `venus.bin` gelesen wird
-- **THEN** heißt der Track `venus`
+#### Scenario: Image from gpsbabel
+- **WHEN** the file `venus.bin` is read
+- **THEN** the track is called `venus`
 
-### Requirement: Erkennung
-Die Formaterkennung SHALL ein SkyTraq-Abbild daran erkennen, dass die Einträge am Anfang des ersten Sektors gültige Typen haben, bis zum ersten `0xFF` oder dem Ende des geprüften Bereichs lückenlos aufeinander folgen, mindestens ein voller Eintrag darunter ist und dessen ECEF-Position zwischen 6 300 km und 6 450 km vom Erdmittelpunkt entfernt liegt.
+### Requirement: Detection
+The format detection SHALL recognize a SkyTraq image by the entries at the start of the first sector having valid types, following each other without gaps up to the first `0xFF` or the end of the examined range, at least one full entry being among them and its ECEF position lying between 6,300 km and 6,450 km from the center of the earth.
 
-#### Scenario: Abbild mit Endung .bin
-- **WHEN** eine Datei `log.bin` mit einem gültigen ersten Sektor geprüft wird
-- **THEN** schlägt die Erkennung `skytraq-bin` vor
+#### Scenario: Image with extension .bin
+- **WHEN** a file `log.bin` with a valid first sector is checked
+- **THEN** the detection suggests `skytraq-bin`
 
-#### Scenario: Andere Binärdatei
-- **WHEN** eine Datei mit zufälligen Bytes oder eine FIT-Datei geprüft wird
-- **THEN** schlägt die Erkennung nicht `skytraq-bin` vor
+#### Scenario: Other binary file
+- **WHEN** a file with random bytes or a FIT file is checked
+- **THEN** the detection does not suggest `skytraq-bin`

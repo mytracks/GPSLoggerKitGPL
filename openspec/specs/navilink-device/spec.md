@@ -1,24 +1,24 @@
 # navilink-device Specification
 
 ## Purpose
-Liest Wegpunkte und Tracklog von Locosys-Geräten im NAVILINK-Modus (GT-11, GT-31, BGT-31, NaviGPS) über die serielle Schnittstelle, portiert aus gpsbabel 1.7.0.
+Reads waypoints and track log of Locosys devices in NAVILINK mode (GT-11, GT-31, BGT-31, NaviGPS) over the serial port, ported from gpsbabel 1.7.0.
 
 ## Requirements
 
-### Requirement: Navilink-Pakete
-Der Treiber SHALL Pakete als `0xA0 0xA2`, Länge (16 Bit, Little Endian, Typ plus Nutzdaten), Typ, Nutzdaten, Summe von Typ und Nutzdaten (15 Bit, Little Endian) und `0xB0 0xB3` senden und empfangen. Ein falscher Kopf, ein unerwarteter Typ, eine falsche Prüfsumme oder ein falsches Ende MUST den Vorgang mit einem Protokollfehler beenden.
+### Requirement: Navilink packets
+The driver SHALL send and receive packets as `0xA0 0xA2`, length (16 bit, little endian, type plus payload), type, payload, sum of type and payload (15 bit, little endian) and `0xB0 0xB3`. A wrong header, an unexpected type, a wrong checksum or a wrong end MUST end the operation with a protocol error.
 
-#### Scenario: Nicht im NAVILINK-Modus
-- **WHEN** das Gerät NMEA-Sätze statt Paketen sendet
-- **THEN** endet der Vorgang mit dem Hinweis, das Gerät in den NAVILINK-Modus zu schalten
+#### Scenario: Not in NAVILINK mode
+- **WHEN** the device sends NMEA sentences instead of packets
+- **THEN** the operation ends with the hint to switch the device to NAVILINK mode
 
-#### Scenario: Prüfsummenfehler
-- **WHEN** ein Datenpaket eine falsche Prüfsumme hat
-- **THEN** endet der Vorgang mit einem Protokollfehler
+#### Scenario: Checksum error
+- **WHEN** a data packet has a wrong checksum
+- **THEN** the operation ends with a protocol error
 
-### Requirement: Auslesen
-Der Treiber SHALL mit `SYNC` (0xD6) synchronisieren, die Geräteinformation abfragen (0x20), die Wegpunkte in Gruppen zu 32 lesen (0x28) und das Tracklog ab der gemeldeten Adresse in Gruppen zu 512 Punkten (0x14), jede Gruppe mit `ACK` (0x0C) quittiert. Trackpunkte SHALL Position (10⁻⁷ Grad), Höhe (Fuß), Zeit (UTC), Kurs und Geschwindigkeit (2 km/h je Einheit) enthalten, Wegpunkte zusätzlich ihren Namen.
+### Requirement: Reading
+The driver SHALL synchronize with `SYNC` (0xD6), query the device information (0x20), read the waypoints in groups of 32 (0x28) and the track log from the reported address in groups of 512 points (0x14), acknowledging every group with `ACK` (0x0C). Track points SHALL contain position (10⁻⁷ degrees), altitude (feet), time (UTC), course and speed (2 km/h per unit), waypoints additionally their name.
 
-#### Scenario: Auslesen
-- **WHEN** das Gerät 40 Wegpunkte und 600 Trackpunkte meldet
-- **THEN** liefert der Treiber 40 Wegpunkte und einen Track mit 600 Punkten, und er hat zwei Gruppen quittiert
+#### Scenario: Reading
+- **WHEN** the device reports 40 waypoints and 600 track points
+- **THEN** the driver returns 40 waypoints and one track with 600 points, and it has acknowledged two groups

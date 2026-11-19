@@ -1,74 +1,74 @@
 # locosys-import Specification
 
 ## Purpose
-Liest die Datenlogger-Dateien (SBP) und SiRF-Binärdateien (SBN) der Locosys-Logger GT-11, GT-31 und BGT-31, portiert aus gpsbabel 1.7.0. Daraus entstehen Tracks.
+Reads the data logger files (SBP) and SiRF binary files (SBN) of the Locosys loggers GT-11, GT-31 and BGT-31, ported from gpsbabel 1.7.0. They become tracks.
 
 ## Requirements
 
-### Requirement: SBP-Kopf
-Das Format `sbp` SHALL die ersten 64 Byte einer Datei als Kopf überspringen. Eine Datei unter 64 Byte MUST mit einem Fehler enden, der die Datei nennt.
+### Requirement: SBP header
+The format `sbp` SHALL skip the first 64 bytes of a file as the header. A file below 64 bytes MUST end with an error that names the file.
 
-#### Scenario: Zu kurze Datei
-- **WHEN** eine SBP-Datei 40 Byte groß ist
-- **THEN** endet das Lesen mit einem Fehler
+#### Scenario: File too short
+- **WHEN** an SBP file is 40 bytes large
+- **THEN** reading ends with an error
 
-### Requirement: SBP-Datensätze
-Das Format `sbp` SHALL nach dem Kopf Datensätze zu 32 Byte lesen (Little Endian): HDOP in Fünfteln (Byte 0), Satelliten (Byte 1), Millisekunden (Bytes 2–3, modulo 1000), gepackte Zeit (Bytes 4–7), Breite und Länge in 10⁻⁷ Grad (Bytes 12–19), Höhe in Zentimetern (Bytes 20–23), Geschwindigkeit in cm/s (Bytes 24–25) und Kurs in Hundertstelgrad (Bytes 26–27). Alle Datensätze SHALL einen Track ergeben, der nach der Datei heißt; ein unvollständiger letzter Datensatz SHALL eine Warnung ergeben.
+### Requirement: SBP records
+After the header the format `sbp` SHALL read records of 32 bytes (little endian): HDOP in fifths (byte 0), satellites (byte 1), milliseconds (bytes 2–3, modulo 1000), packed time (bytes 4–7), latitude and longitude in 10⁻⁷ degrees (bytes 12–19), altitude in centimeters (bytes 20–23), speed in cm/s (bytes 24–25) and course in hundredths of a degree (bytes 26–27). All records SHALL result in one track named after the file; an incomplete last record SHALL result in a warning.
 
-#### Scenario: Datensatz eines GT-31
-- **WHEN** ein Datensatz 2026-11-02T12:00:00.250Z, 50,0°, 8,0°, 123,45 m, 250 cm/s, 9000 (90°), 7 Satelliten und HDOP 5 codiert
-- **THEN** entsteht ein Punkt mit diesen Werten, der Geschwindigkeit 2,5 m/s, dem Kurs 90° und HDOP 1,0
+#### Scenario: Record of a GT-31
+- **WHEN** a record encodes 2026-11-02T12:00:00.250Z, 50.0°, 8.0°, 123.45 m, 250 cm/s, 9000 (90°), 7 satellites and HDOP 5
+- **THEN** a point results with these values, the speed 2.5 m/s, the course 90° and HDOP 1.0
 
-### Requirement: Gepackte SBP-Zeit
-Die gepackte Zeit SHALL aus Sekunde (Bits 0–5), Minute (6–11), Stunde (12–16), Tag (17–21) und `Jahr × 12 + Monat` (Bits 22–31, Jahr ab 2000) bestehen, als UTC. Ein Wert, dessen Rest modulo 12 null ist, SHALL den Dezember des Vorjahrs bezeichnen.
+### Requirement: Packed SBP time
+The packed time SHALL consist of second (bits 0–5), minute (6–11), hour (12–16), day (17–21) and `year × 12 + month` (bits 22–31, year from 2000), as UTC. A value whose remainder modulo 12 is zero SHALL denote December of the previous year.
 
-#### Scenario: Dezember
-- **WHEN** die Monatsbits `26 × 12 + 12` enthalten
-- **THEN** liegt der Punkt im Dezember 2026
+#### Scenario: December
+- **WHEN** the month bits contain `26 × 12 + 12`
+- **THEN** the point lies in December 2026
 
-### Requirement: SBN-Pakete
-Das Format `sbn` SHALL eine Datei als Folge von SiRF-Paketen lesen: `0xA0 0xA2`, Länge (16 Bit, Big Endian), Nutzdaten, Prüfsumme (Summe der Nutzdaten, 15 Bit, Big Endian) und `0xB0 0xB3`. Das erste Paket MUST vom Typ 253 (Geräteinformation) sein, sonst endet das Lesen mit einem Fehler. Pakete vom Typ 13 (Satellitenliste) SHALL übergangen werden.
+### Requirement: SBN packets
+The format `sbn` SHALL read a file as a sequence of SiRF packets: `0xA0 0xA2`, length (16 bit, big endian), payload, checksum (sum of the payload, 15 bit, big endian) and `0xB0 0xB3`. The first packet MUST be of type 253 (device information), otherwise reading ends with an error. Packets of type 13 (satellite list) SHALL be skipped.
 
-#### Scenario: Keine SBN-Datei
-- **WHEN** das erste Paket vom Typ 41 ist
-- **THEN** endet das Lesen mit einem Fehler, der die Datei nennt
+#### Scenario: Not an SBN file
+- **WHEN** the first packet is of type 41
+- **THEN** reading ends with an error that names the file
 
-### Requirement: Beschädigte SBN-Pakete
-Ein Paket mit falscher Prüfsumme SHALL verworfen und gezählt werden. Ein beschädigter Paketrahmen SHALL das Lesen mit einer Warnung über die abgeschnittene Datei beenden.
+### Requirement: Damaged SBN packets
+A packet with a wrong checksum SHALL be discarded and counted. A damaged packet frame SHALL end reading with a warning about the truncated file.
 
-#### Scenario: Falsche Prüfsumme
-- **WHEN** das zweite von drei Navigationspaketen eine falsche Prüfsumme hat
-- **THEN** entstehen zwei Punkte und eine Warnung
+#### Scenario: Wrong checksum
+- **WHEN** the second of three navigation packets has a wrong checksum
+- **THEN** two points and a warning result
 
-### Requirement: SBN-Navigationsdaten
-Ein Paket vom Typ 41 SHALL einen Trackpunkt ergeben (Big Endian, Offsets in den Nutzdaten ohne Typbyte): Gültigkeit (Bytes 0–1), Modus (Byte 3), Jahr, Monat, Tag, Stunde, Minute und Millisekunden der Minute (Bytes 10–17), Breite und Länge in 10⁻⁷ Grad (Bytes 22–29), Höhe in Zentimetern (Bytes 34–37), Geschwindigkeit in cm/s (Bytes 39–40), Kurs in Hundertstelgrad (Bytes 41–42), Satelliten (Byte 87) und HDOP in Fünfteln (Byte 88).
+### Requirement: SBN navigation data
+A packet of type 41 SHALL result in a track point (big endian, offsets in the payload without the type byte): validity (bytes 0–1), mode (byte 3), year, month, day, hour, minute and milliseconds of the minute (bytes 10–17), latitude and longitude in 10⁻⁷ degrees (bytes 22–29), altitude in centimeters (bytes 34–37), speed in cm/s (bytes 39–40), course in hundredths of a degree (bytes 41–42), satellites (byte 87) and HDOP in fifths (byte 88).
 
-#### Scenario: Navigationspaket
-- **WHEN** ein Navigationspaket 2026-11-02T12:00:01.500Z, 50,0°, 8,0° und 100 m codiert
-- **THEN** entsteht ein Punkt mit diesen Werten
+#### Scenario: Navigation packet
+- **WHEN** a navigation packet encodes 2026-11-02T12:00:01.500Z, 50.0°, 8.0° and 100 m
+- **THEN** a point results with these values
 
-### Requirement: SBN-Fix-Art
-Bei Gültigkeit 0 SHALL der Modus (Bits 0–2) die Fix-Art ergeben: 3 und 5 `2d`, 4 und 6 `3d` (mit gesetztem Bit 7 `dgps`), sonst `none`. Bei anderer Gültigkeit SHALL die Fix-Art `none` sein.
+### Requirement: SBN fix type
+With validity 0 the mode (bits 0–2) SHALL give the fix type: 3 and 5 `2d`, 4 and 6 `3d` (with bit 7 set `dgps`), otherwise `none`. With another validity the fix type SHALL be `none`.
 
-#### Scenario: Gültiger 3D-Fix mit DGPS
-- **WHEN** ein Navigationspaket die Gültigkeit 0 und den Modus `0x84` hat
-- **THEN** hat der Punkt die Fix-Art `dgps`
+#### Scenario: Valid 3D fix with DGPS
+- **WHEN** a navigation packet has the validity 0 and the mode `0x84`
+- **THEN** the point has the fix type `dgps`
 
-#### Scenario: Ungültige Lösung
-- **WHEN** ein Navigationspaket die Gültigkeit `0x0001` hat
-- **THEN** hat der Punkt die Fix-Art `none`
+#### Scenario: Invalid solution
+- **WHEN** a navigation packet has the validity `0x0001`
+- **THEN** the point has the fix type `none`
 
-### Requirement: Erkennung der Locosys-Formate
-Die Formaterkennung SHALL `sbn` an einem ersten SiRF-Paket vom Typ 253 mit gültiger Prüfsumme und gültigem Rahmen erkennen. Sie SHALL `sbp` erkennen, wenn der Kopf ab Byte 7 eine durch Kommas getrennte Geräteinformation aus druckbaren ASCII-Zeichen enthält oder Byte 6 den Wert `0xFD` hat, und der erste Datensatz eine gültige Zeit (Jahr ab 2004), eine Breite von höchstens 90° und eine Länge von höchstens 180° hat.
+### Requirement: Detection of the Locosys formats
+The format detection SHALL recognize `sbn` by a first SiRF packet of type 253 with a valid checksum and a valid frame. It SHALL recognize `sbp` if the header contains from byte 7 a comma-separated device information of printable ASCII characters or byte 6 has the value `0xFD`, and the first record has a valid time (year from 2004), a latitude of at most 90° and a longitude of at most 180°.
 
-#### Scenario: SBN-Datei
-- **WHEN** eine Datei mit einem Informationspaket am Anfang geprüft wird
-- **THEN** schlägt die Erkennung `sbn` vor
+#### Scenario: SBN file
+- **WHEN** a file with an information packet at the start is checked
+- **THEN** the detection suggests `sbn`
 
-#### Scenario: SBP-Datei
-- **WHEN** eine Datei mit Locosys-Kopf und gültigem erstem Datensatz geprüft wird
-- **THEN** schlägt die Erkennung `sbp` vor
+#### Scenario: SBP file
+- **WHEN** a file with a Locosys header and a valid first record is checked
+- **THEN** the detection suggests `sbp`
 
-#### Scenario: Andere Dateien
-- **WHEN** eine SkyTraq-, MTK- oder Wintec-Datei geprüft wird
-- **THEN** schlägt die Erkennung weder `sbp` noch `sbn` vor
+#### Scenario: Other files
+- **WHEN** a SkyTraq, MTK or Wintec file is checked
+- **THEN** the detection suggests neither `sbp` nor `sbn`

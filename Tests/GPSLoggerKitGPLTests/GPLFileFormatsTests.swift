@@ -14,7 +14,7 @@ func sections(in text: String) -> Set<String> {
 
 @Suite("GPSLoggerKitGPL catalog and provenance")
 struct GPLFileFormatsTests {
-    /// Spec `logger-kit-gpl`, "Lizenzdatei".
+    /// Spec `logger-kit-gpl`, "License file".
     @Test func licenseIsGPLVersion3() throws {
         let text = try String(contentsOf: packageDirectory.appendingPathComponent("LICENSE"), encoding: .utf8)
         let head = text.split(separator: "\n").prefix(3).map { $0.trimmingCharacters(in: .whitespaces) }
@@ -24,7 +24,7 @@ struct GPLFileFormatsTests {
         #expect(readme.contains("GPL-3.0-or-later"))
     }
 
-    /// Spec `logger-kit-gpl`, "Leerer Katalog" (while the package has no formats) and catalog order in general.
+    /// Spec `logger-kit-gpl`, "Empty catalog" (while the package has no formats) and catalog order in general.
     @Test func combinedCatalogStartsWithGPSLoggerKit() {
         let catalog = FormatCatalog.standard.adding(GPLFileFormats.all)
         #expect(catalog.all.map(\.id) == FileFormats.all.map(\.id) + GPLFileFormats.all.map(\.id))
@@ -33,14 +33,14 @@ struct GPLFileFormatsTests {
         }
     }
 
-    /// Spec `logger-kit-gpl`, "Eindeutige Kennungen".
+    /// Spec `logger-kit-gpl`, "Unique identifiers".
     @Test func identifiersDifferFromGPSLoggerKit() {
         let own = GPLFileFormats.all.map(\.id)
         #expect(Set(own).count == own.count)
         #expect(Set(own).isDisjoint(with: FileFormats.all.map(\.id)))
     }
 
-    /// Spec `logger-kit-gpl`, "Neues Format": every format has a section in PROVENANCE.md.
+    /// Spec `logger-kit-gpl`, "New format": every format has a section in PROVENANCE.md.
     @Test func everyFormatHasAProvenanceSection() throws {
         let text = try String(contentsOf: packageDirectory.appendingPathComponent("PROVENANCE.md"), encoding: .utf8)
         let found = sections(in: text)
@@ -66,7 +66,7 @@ struct GPLFileFormatsTests {
         }
     }
 
-    /// Spec `logger-kit-gpl`, "SkyTraq im Katalog".
+    /// Spec `logger-kit-gpl`, "SkyTraq in the catalog".
     @Test func skyTraqIsInTheCatalog() throws {
         let format = try #require(GPLFileFormats.all.first { $0.id == .skytraqBin })
         #expect(format.fileExtensions == ["bin"])
@@ -76,7 +76,7 @@ struct GPLFileFormatsTests {
         #expect(credit.authors.contains("Mathias Adam"))
     }
 
-    /// Spec `logger-kit-gpl`, "MTK-Formate abfragen".
+    /// Spec `logger-kit-gpl`, "Query the MTK formats".
     @Test func mtkIsInTheCatalog() throws {
         let ids = GPLFileFormats.all.map(\.id)
         #expect(ids.contains(.mtkBin) && ids.contains(.m241Bin))

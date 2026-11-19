@@ -1,80 +1,84 @@
 schema: spec-driven
 
-# Projektkontext: Leitplanken für alle OpenSpec-Artefakte dieses Repositorys.
-# Herkunft: aufgeteilt aus openspec/config.yaml von https://github.com/mytracks/gpsloader
-# (Change split-repositories, 2026-11-19). Die Planungshistorie bis dahin liegt dort unter
-# openspec/changes/archive/.
+# Project context: guardrails for all OpenSpec artifacts of this repository.
+# Origin: split from openspec/config.yaml of https://github.com/mytracks/gpsloader (change split-repositories,
+# 2026-11-19). The planning history up to then is there under openspec/changes/archive/ (in German).
 context: |
-  ## Produkt
-  GPSLoggerKitGPL ist ein Swift-Paket für Dateiformate und Geräteprotokolle von GPS-Loggern, die aus
-  Quelltext unter der GPL oder einer damit vereinbaren Lizenz portiert sind. Es ergänzt GPSLoggerKit
-  (MIT, Repository mytracks/GPSLoggerKit) und baut auf dessen Datenmodell, FormatCatalog und
-  Geräteschnittstelle (DeviceConnection/DeviceProtocol) auf. Genutzt wird es von myTracks Loader
-  (Repository mytracks/gpsloader), per Paket-URL und Version.
+  ## Product
+  GPSLoggerKitGPL is a Swift package for file formats and device protocols of GPS loggers that are ported
+  from source code under the GPL or a license compatible with it. It complements GPSLoggerKit (MIT,
+  repository mytracks/GPSLoggerKit) and builds on its data model, FormatCatalog and device interface
+  (DeviceConnection/DeviceProtocol). It is used by myTracks Loader (repository mytracks/gpsloader), by
+  package URL and version.
 
-  ## Lizenz und Plattform (entschieden am 2026-11-10, Change gpl-driver-package in gpsloader)
-  - Lizenz: GPL-3.0-or-later. Jede App, die das Paket einbindet, fällt als Ganzes unter die GPL.
-    myTracks Neo (App Store, ohne offenen Quellcode) darf es deshalb nicht nutzen.
-  - Nur macOS 12+ (kein iOS: App-Store-Bedingungen und GPL vertragen sich nicht).
-  - Hängt nur von GPSLoggerKit (per URL, `.upToNextMinor`) und den Systembibliotheken ab.
-    GPSLoggerKit hängt nie von diesem Paket ab.
-  - Nur Swift: Swift 6 Language Mode, Strict Concurrency, keine Pakete von Drittanbietern.
-  - Alles ohne Hardware testbar (Fixtures, simulierte Geräte). Keine echten Ortsdaten.
-  - Versionen nach Semantic Versioning, Git-Tags wie `0.1.0`, Start mit 0.1.0 (entschieden am
+  ## Language (decided by the developer on 2026-11-19)
+  - All files in this repository are in English, including OpenSpec artifacts. The conversation with the
+    developer is in German. Localized format names exist in German and English.
+
+  ## License and platform (decided on 2026-11-10, change gpl-driver-package in gpsloader)
+  - License: GPL-3.0-or-later. Every app that uses the package is covered by the GPL as a whole.
+    myTracks Neo (App Store, closed source) must therefore not use it.
+  - macOS 12+ only (no iOS: App Store terms and the GPL are not compatible).
+  - Depends only on GPSLoggerKit (by URL, `.upToNextMinor`) and the system libraries. GPSLoggerKit never
+    depends on this package.
+  - Swift only: Swift 6 language mode, strict concurrency, no third-party packages.
+  - Everything testable without hardware (fixtures, simulated devices). No real location data.
+  - Versions according to Semantic Versioning, Git tags like `0.1.0`, starting with 0.1.0 (decided on
     2026-11-19).
 
-  ## Regeln für Portierungen
-  - GPL-Quelltext darf nur in einem Change gelesen werden, dessen Proposal die Familie diesem Paket
-    zuordnet, und nur für diese Familie.
-  - Kein Rückweg: Ist für eine Familie GPL-Quelltext gelesen, bleibt sie in diesem Paket.
-  - Braucht eine Portierung etwas Neues in GPSLoggerKit, dann nur als eigener Change dort, in
-    allgemeiner Form und ohne Code aus der Vorlage (Clean-Room-Regel von GPSLoggerKit). Sonst gehören
-    Hilfsfunktionen in dieses Paket.
-  - Zulässige Lizenzen der Vorlagen: GPL-2.0-or-later, GPL-3.0(-or-later), LGPL-2.1-or-later,
-    CC BY-SA 4.0, MIT, BSD, Apache 2.0, Public Domain. Nicht zulässig: GPL-2.0-only, CC BY-SA bis 3.0,
-    eigene Lizenzen und Quellen ohne Lizenz, solange die Urheber keine vereinbare Lizenz erteilen.
-  - gpsbabel-Vorlagen vom Tag `gpsbabel_1_7_0` (passend zum Binary der Alt-App); Quellen werden in
-    einen temporären Ordner geladen, nie ins Repository. Das gpsbabel-Binary dient nur der
-    Black-Box-Gegenprüfung, als Prozess mit Argument-Array, nie über eine Shell.
-  - Jede portierte Datei trägt einen Kopf mit Vorlage (Projekt, Pfad, Tag/Commit), Urheberhinweis und
-    Lizenz der Vorlage, Hinweis auf Übersetzung und Änderung mit Datum sowie
-    `SPDX-License-Identifier: GPL-3.0-or-later`. PROVENANCE.md hat je Format einen Abschnitt,
-    `GPLFileFormats.credits` je Quellprojekt einen Eintrag (Anzeige im Über-Fenster der App).
+  ## Porting rules
+  - GPL source code may only be read in a change whose proposal assigns the family to this package, and
+    only for this family.
+  - No way back: once GPL source code has been read for a family, it stays in this package.
+  - If a port needs something new in GPSLoggerKit, then only as a change of its own there, in generic form
+    and without code from the template (clean-room rule of GPSLoggerKit). Otherwise helpers belong in
+    this package.
+  - Permitted licenses of the templates: GPL-2.0-or-later, GPL-3.0(-or-later), LGPL-2.1-or-later,
+    CC BY-SA 4.0, MIT, BSD, Apache 2.0, public domain. Not permitted: GPL-2.0-only, CC BY-SA up to 3.0,
+    licenses of their own and sources without a license, as long as the authors grant no compatible
+    license.
+  - gpsbabel templates from the tag `gpsbabel_1_7_0` (matching the binary of the old app); sources are
+    loaded into a temporary folder, never into the repository. The gpsbabel binary only serves black-box
+    cross-checks, as a process with an argument array, never through a shell.
+  - Every ported file carries a header with the template (project, path, tag/commit), the copyright
+    notice and license of the template, a note on translation and modification with the date and
+    `SPDX-License-Identifier: GPL-3.0-or-later`. PROVENANCE.md has a section per format,
+    `GPLFileFormats.credits` an entry per source project (shown in the About window of the app).
 
-  ## Familien in diesem Paket
-  - Aus gpsbabel 1.7.0 (GPL-2.0-or-later): SkyTraq (skytraq-bin und Geräteprotokoll), MTK/Holux
-    (mtk-bin, m241-bin, Geräteprotokoll), Wintec (wintec-tes, wbt-bin, wbt-tk1, Geräteprotokoll),
-    Locosys/Navilink (sbp, sbn, Geräteprotokoll), Medion GoPal, Magellan (magellan, magellanx,
-    Geräteprotokoll), XAiOX iTrackU (Geräteprotokoll), Alan Map500 (alantrl).
-  - i-GotU: Geräteprotokoll aus eigenem myTracks-Code und igotu2gpx 0.3.0 (GPL-3.0-or-later). Löschen
-    ist als „experimentell“ gekennzeichnet.
-  - Gerätekatalog, Transporte (seriell, USB-HID, Bluetooth) und UI gehören der App (gpsloader).
+  ## Families in this package
+  - From gpsbabel 1.7.0 (GPL-2.0-or-later): SkyTraq (skytraq-bin and device protocol), MTK/Holux
+    (mtk-bin, m241-bin, device protocol), Wintec (wintec-tes, wbt-bin, wbt-tk1, device protocol),
+    Locosys/Navilink (sbp, sbn, device protocol), Medion GoPal, Magellan (magellan, magellanx, device
+    protocol), XAiOX iTrackU (device protocol), Alan Map500 (alantrl).
+  - i-GotU: device protocol from the developer's own myTracks code and igotu2gpx 0.3.0
+    (GPL-3.0-or-later). Erasing is marked "experimental".
+  - Device catalog, transports (serial, USB HID, Bluetooth) and UI belong to the app (gpsloader).
 
-  ## Rahmenbedingungen der Entwicklung
-  - Der Entwickler ist sehr erfahren mit macOS und myTracks. Er hat keine i-GotU- und Bluetooth-Logger;
-    diese testen die Anwender.
-  - Alt-Quellen im Nachbar-Checkout (nur lesen): ../gpsloader/input/mytracks4mac/, fachliche Analyse
-    ../gpsloader/docs/legacy-analysis.md.
-  - Ein Change ändert nur dieses Repository; die App übernimmt neue Versionen mit eigenen Changes.
+  ## Development conditions
+  - The developer is very experienced with macOS and myTracks. The developer has no i-GotU and no
+    Bluetooth loggers; users test those.
+  - Old sources in the neighboring checkout (read only): ../gpsloader/input/mytracks4mac/, functional
+    analysis ../gpsloader/docs/legacy-analysis.md.
+  - A change modifies only this repository; the app takes over new versions with changes of its own.
 
 rules:
   proposal:
-    - Auf Deutsch schreiben.
-    - Betroffene Geräte und Treiberfamilien explizit nennen.
-    - Immer einen Abschnitt "Nicht im Umfang" aufnehmen.
-    - Bei einer neuen Familie die Vorlagen mit Lizenz nennen und die Zuordnung zu diesem Paket beim
-      Entwickler einholen.
-    - Angeben, ob die Änderung für die App kompatibel ist (Patch, Nebenversion).
+    - Write in English.
+    - Name the affected devices and driver families explicitly.
+    - Always include a section "Out of scope".
+    - For a new family name the templates with their licenses and get the developer's decision on the
+      assignment to this package.
+    - State whether the change is compatible for the app (patch, minor version).
   specs:
-    - Fließtext auf Deutsch. Jede Requirement-Aussage enthält das Schlüsselwort SHALL oder MUST.
-    - Requirement-Texte höchstens 500 Zeichen; Beispiele und Sonderfälle in Szenarien.
-    - Szenarien im Format WHEN/THEN, ohne Hardware prüfbar.
-    - Protokolldetails (Befehle, Antwortformate, Byte-Layouts) gehören in die Specs der Familie.
+    - Write in English. Every requirement statement contains the keyword SHALL or MUST.
+    - Requirement texts at most 500 characters; examples and edge cases go into scenarios.
+    - Scenarios in WHEN/THEN form, testable without hardware.
+    - Protocol details (commands, answer formats, byte layouts) belong in the specs of the family.
   design:
-    - Auf Deutsch schreiben.
-    - Jede Vorlage mit Projekt, Pfad, Tag/Commit und der zitierten Lizenzangabe (Datei und Zeile) nennen.
-    - "Swift-6-Concurrency explizit behandeln: Isolation, Sendable, Timeouts, Abbruch."
+    - Write in English.
+    - Name every template with project, path, tag/commit and the quoted license statement (file and line).
+    - "Handle Swift 6 concurrency explicitly: isolation, Sendable, timeouts, cancellation."
   tasks:
-    - Auf Deutsch schreiben.
-    - Zu jedem Protokoll-/Parser-Task gehört ein Test-Task mit Fixtures.
-    - Manuelle Hardware-Tests als "[manuell, Hardware]", Tests der Anwender als "[manuell, Anwender]".
+    - Write in English.
+    - Every protocol/parser task has a test task with fixtures.
+    - Manual hardware tests as "[manual, hardware]", tests by users as "[manual, user]".

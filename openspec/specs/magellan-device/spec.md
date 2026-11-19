@@ -1,43 +1,43 @@
 # magellan-device Specification
 
 ## Purpose
-Liest Track und Wegpunkte von Magellan Meridian und SporTrak über die serielle Schnittstelle aus, portiert aus gpsbabel 1.7.0.
+Reads track and waypoints of Magellan Meridian and SporTrak over the serial port, ported from gpsbabel 1.7.0.
 
 ## Requirements
 
-### Requirement: Magellan-Sätze senden und empfangen
-Der Treiber SHALL Befehle als `$<Inhalt>*<XX>` mit CR LF senden. XX ist das XOR aller Zeichen des Inhalts in Hex. Er SHALL Zeilen bis LF lesen, CR verwerfen und für jede Zeile höchstens 2 Sekunden warten. Bleibt eine Zeile aus, MUST der Vorgang mit einer Zeitüberschreitung enden.
+### Requirement: Send and receive Magellan sentences
+The driver SHALL send commands as `$<content>*<XX>` with CR LF. XX is the XOR of all characters of the content in hex. It SHALL read lines up to LF, discard CR and wait at most 2 seconds for every line. If a line does not arrive, the operation MUST end with a timeout.
 
-#### Scenario: Prüfsumme eines Befehls
-- **WHEN** der Treiber `PMGNCMD,VERSION` sendet
-- **THEN** sendet er `$PMGNCMD,VERSION*` mit dem XOR der Zeichen als zwei Hex-Ziffern und CR LF
+#### Scenario: Checksum of a command
+- **WHEN** the driver sends `PMGNCMD,VERSION`
+- **THEN** it sends `$PMGNCMD,VERSION*` with the XOR of the characters as two hex digits and CR LF
 
-#### Scenario: Gerät verstummt
-- **WHEN** das Gerät während des Tracks 2 Sekunden lang keine Zeile sendet
-- **THEN** endet der Vorgang mit einer Zeitüberschreitung
+#### Scenario: Device falls silent
+- **WHEN** the device sends no line for 2 seconds during the track
+- **THEN** the operation ends with a timeout
 
-### Requirement: Verbindung aufbauen
-Der Treiber SHALL mit 4800 Baud `PMGNCMD,HANDOFF` und `PMGNCMD,VERSION` senden und höchstens 6 Sekunden auf `$PMGNVER` warten. Kennt er die Produktnummer nicht, MUST der Vorgang mit einem Protokollfehler enden. Eine falsche Prüfsumme vor `$PMGNVER` MUST den Vorgang mit dem Hinweis auf eine falsche Baudrate beenden. Außer bei GPS 315/320 und Map 410 SHALL er `PMGNCMD,NMEAOFF` senden und eine Ablehnung hinnehmen.
+### Requirement: Connect
+The driver SHALL send `PMGNCMD,HANDOFF` and `PMGNCMD,VERSION` at 4800 baud and wait at most 6 seconds for `$PMGNVER`. If it does not know the product number, the operation MUST end with a protocol error. A wrong checksum before `$PMGNVER` MUST end the operation with the hint to a wrong baud rate. Except for GPS 315/320 and Map 410 it SHALL send `PMGNCMD,NMEAOFF` and accept a refusal.
 
-#### Scenario: Meridian meldet sich
-- **WHEN** das Gerät `$PMGNVER,33,…` sendet
-- **THEN** sendet der Treiber `PMGNCMD,NMEAOFF` und liest danach Track und Wegpunkte
+#### Scenario: Meridian answers
+- **WHEN** the device sends `$PMGNVER,33,…`
+- **THEN** the driver sends `PMGNCMD,NMEAOFF` and then reads track and waypoints
 
-#### Scenario: Unbekanntes Gerät
-- **WHEN** das Gerät die Produktnummer 99 meldet
-- **THEN** endet der Vorgang mit einem Protokollfehler, der die Nummer nennt
+#### Scenario: Unknown device
+- **WHEN** the device reports the product number 99
+- **THEN** the operation ends with a protocol error that names the number
 
-#### Scenario: Falsche Baudrate
-- **WHEN** vor `$PMGNVER` ein Satz mit falscher Prüfsumme ankommt
-- **THEN** endet der Vorgang mit dem Hinweis, die Baudrate zu prüfen
+#### Scenario: Wrong baud rate
+- **WHEN** a sentence with a wrong checksum arrives before `$PMGNVER`
+- **THEN** the operation ends with the hint to check the baud rate
 
-### Requirement: Track und Wegpunkte lesen
-Der Treiber SHALL `PMGNCMD,TRACK,2` senden und Tracksätze bis `$PMGNCMD,END` lesen, dann `PMGNCMD,WAYPOINT` und Wegpunktsätze bis `$PMGNCMD,END`. Die Sätze dekodiert er wie in der Spec `magellan-import`. Antwortet das Gerät mit `$PMGNCMD,UNABLE`, SHALL dieser Teil leer bleiben, und der Treiber SHALL das als Schritt melden. Zum Schluss SHALL er `PMGNCMD,HANDOFF` senden. Quittungen sendet er beim Lesen nicht.
+### Requirement: Read track and waypoints
+The driver SHALL send `PMGNCMD,TRACK,2` and read track sentences up to `$PMGNCMD,END`, then `PMGNCMD,WAYPOINT` and waypoint sentences up to `$PMGNCMD,END`. It decodes the sentences as in the spec `magellan-import`. If the device answers `$PMGNCMD,UNABLE`, this part SHALL stay empty, and the driver SHALL report that as a step. At the end it SHALL send `PMGNCMD,HANDOFF`. It sends no acknowledgments while reading.
 
-#### Scenario: Auslesen
-- **WHEN** das Gerät 500 Tracksätze und 20 Wegpunktsätze liefert
-- **THEN** liefert der Treiber einen Track „Magellan“ mit 500 Punkten und 20 Wegpunkte
+#### Scenario: Reading
+- **WHEN** the device returns 500 track sentences and 20 waypoint sentences
+- **THEN** the driver returns a track "Magellan" with 500 points and 20 waypoints
 
-#### Scenario: Keine Wegpunkte
-- **WHEN** das Gerät auf `PMGNCMD,WAYPOINT` mit `$PMGNCMD,UNABLE` antwortet
-- **THEN** liefert der Treiber den Track ohne Wegpunkte und meldet den Schritt „Gerät sendet keine Wegpunkte“
+#### Scenario: No waypoints
+- **WHEN** the device answers `PMGNCMD,WAYPOINT` with `$PMGNCMD,UNABLE`
+- **THEN** the driver returns the track without waypoints and reports the step "device sends no waypoints"

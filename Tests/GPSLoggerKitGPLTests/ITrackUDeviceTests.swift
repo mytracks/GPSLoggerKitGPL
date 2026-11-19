@@ -64,7 +64,7 @@ private func device(_ simulator: ITrackUSimulator) -> SimulatedDevice {
 
 @Suite("iTrackU device")
 struct ITrackUDeviceTests {
-    /// Scenarios "Gerät antwortet" and "Speicher mit Endemarke" (all records arrive with the marker).
+    /// Scenarios "Device answers" and "Memory with end marker" (all records arrive with the marker).
     @Test func readsTheMemory() async throws {
         let simulator = ITrackUSimulator(records: ITrackUSimulator.track(300))
         let recording = try await ITrackUDevice().read(device(simulator), DeviceReporter())
@@ -76,7 +76,7 @@ struct ITrackUDeviceTests {
                                      ITrackUDevice.readCommand])
     }
 
-    /// Scenario "Anderes Gerät".
+    /// Scenario "Other device".
     @Test func otherDevice() async {
         let simulator = ITrackUSimulator(records: [])
         simulator.answersDetection = false
@@ -85,7 +85,7 @@ struct ITrackUDeviceTests {
         }
     }
 
-    /// Scenario "Gerät verstummt".
+    /// Scenario "Device falls silent".
     @Test func deviceFallsSilent() async {
         let simulator = ITrackUSimulator(records: ITrackUSimulator.track(100))
         simulator.sendsEndMarker = false
@@ -94,7 +94,7 @@ struct ITrackUDeviceTests {
         }
     }
 
-    /// Scenario "Umrechnung".
+    /// Scenario "Conversion".
     @Test func conversion() throws {
         let time = try #require(ISO8601DateFormatter().date(from: "2026-11-02T12:34:56Z"))
         var record = itrackuRecord(latitude: 50.5, longitude: -8.25, altitude: 123, knots: 10, time: time)
@@ -108,7 +108,7 @@ struct ITrackUDeviceTests {
         #expect(ITrackUDevice.decode(record).first?.elevation == Double(0xFF7B))
     }
 
-    /// Scenario "Leerer Speicherplatz".
+    /// Scenario "Empty memory slot".
     @Test func emptySlot() {
         let data = [UInt8](repeating: 0xFF, count: 16) + ITrackUSimulator.track(1)[0] + [0x01, 0x02]
         #expect(ITrackUDevice.decode(data).count == 1)

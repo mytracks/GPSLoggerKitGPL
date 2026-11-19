@@ -94,7 +94,7 @@ struct WintecDeviceTests {
         #expect(simulator.commands.contains("$PFST,READLOGGER"))
     }
 
-    /// Scenario "WBT-201 mit Prüfsumme": 300 records = two chunks, the first one is sent with a wrong
+    /// Scenario "WBT-201 with checksum": 300 records = two chunks, the first one is sent with a wrong
     /// checksum and requested again.
     @Test func wbt201() async throws {
         let memory = wbt201Records(300, startFlags: [0, 200], waypoints: [5])
@@ -108,7 +108,7 @@ struct WintecDeviceTests {
         #expect(simulator.commands.last == "@AL,2,1")
     }
 
-    /// Scenario "Überschriebener Ringpuffer": the log wrapped around; reading starts at the oldest data.
+    /// Scenario "Overwritten ring buffer": the log wrapped around; reading starts at the oldest data.
     @Test func wrappedRingBuffer() async throws {
         let older = wbt201Records(100)  // written first, at the end of the area
         let newer = Array(wbt201Records(150).suffix(50 * 16))  // continues at the start of the area
@@ -123,14 +123,14 @@ struct WintecDeviceTests {
         #expect(points.first?.elevation == 0 && points.last?.elevation == 149)
     }
 
-    /// Scenario "Kein Wintec-Gerät".
+    /// Scenario "No Wintec device".
     @Test func unknownDevice() async {
         await #expect(throws: DeviceProtocolError("Can't determine the Wintec device type")) {
             try await WintecDevice().read(SimulatedDevice { _, _ in [] }, DeviceReporter())
         }
     }
 
-    /// Scenario "Speicher löschen" for both protocol variants.
+    /// Scenario "Erase the memory" for both protocol variants.
     @Test(arguments: [WintecDevice.DeviceType.wbt200, .wbt201])
     func erase(type: WintecDevice.DeviceType) async throws {
         let simulator = WintecSimulator(type: type, memory: [])

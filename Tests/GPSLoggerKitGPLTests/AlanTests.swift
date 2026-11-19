@@ -69,17 +69,17 @@ struct AlanTests {
         try AlanFileFormat().read([FileInput(name: name, data: data)])
     }
 
-    /// Scenario "Falsche Kennung".
+    /// Scenario "Wrong identifier".
     @Test func wrongID() {
         #expect(throws: GPSLoggerError.self) { try read(AlanTestFile.make([], id: 0x1234_5678)) }
     }
 
-    /// Scenario "Zu kurze Datei".
+    /// Scenario "File too short".
     @Test func tooShort() {
         #expect(throws: GPSLoggerError.self) { try read(AlanTestFile.make([]).prefix(AlanFileFormat.minimumLength - 1)) }
     }
 
-    /// Scenario "Zwei belegte Tracks".
+    /// Scenario "Two occupied tracks".
     @Test func twoTracks() throws {
         let data = AlanTestFile.make([
             .init(slot: 0, name: "FIRST", totalPoints: 100, points: AlanTestFile.line(100, latitude: 10, longitude: 20)),
@@ -93,7 +93,7 @@ struct AlanTests {
         #expect(abs(last.latitude - (11 + 2499.0 / 36000)) < 1e-9)
     }
 
-    /// Scenario "Umrechnung".
+    /// Scenario "Conversion".
     @Test func conversion() throws {
         let point = AlanTestFile.Point(x: 288_000, y: -1_800_000, height: 500, speed: 7200)
         let result = try read(AlanTestFile.make([.init(slot: 2, name: "", totalPoints: 1, points: [point])]), name: "Tour.trl")
@@ -105,7 +105,7 @@ struct AlanTests {
         #expect(unknown.recording.tracks.first?.segments.first?.points.first?.quality.speed == nil)
     }
 
-    /// Scenario "Zu große Punktzahl".
+    /// Scenario "Too many points".
     @Test func tooManyPoints() throws {
         let result = try read(AlanTestFile.make([.init(slot: 7, name: "BIG", totalPoints: 3000,
                                                        points: AlanTestFile.line(2500, latitude: 1, longitude: 1))]))
@@ -113,7 +113,7 @@ struct AlanTests {
         #expect(result.warnings.map(\.kind) == [.malformedRecord])
     }
 
-    /// Scenario "Textdatei mit Endung trl" and detection of a real layout.
+    /// Scenario "Text file with extension trl" and detection of a real layout.
     @Test func detection() {
         let format = AlanFileFormat()
         let text = Data(String(repeating: "Track,1,2,3\n", count: 400).utf8)
@@ -125,7 +125,7 @@ struct AlanTests {
         #expect(catalog.detect(prefix: text.prefix(4096), fileName: "x.trl")?.id != .alanTrl)
     }
 
-    /// Spec `logger-kit-gpl`, "Alan-Format abfragen".
+    /// Spec `logger-kit-gpl`, "Query the Alan format".
     @Test func alanIsInTheCatalog() throws {
         #expect(GPLFileFormats.all.last?.id == .alanTrl)
         #expect(GPLFileFormats.all.last?.fileExtensions == ["trl"])

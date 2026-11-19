@@ -102,14 +102,14 @@ private typealias Fix = LocosysTestFile.Fix
 
 @Suite("Locosys files")
 struct LocosysTests {
-    /// Scenario "Zu kurze Datei".
+    /// Scenario "File too short".
     @Test func shortSBP() {
         #expect(throws: GPSLoggerError(.malformed(line: nil), fileName: "a.sbp")) {
             try read([UInt8](repeating: 0xFF, count: 40), name: "a.sbp", SBPFileFormat())
         }
     }
 
-    /// Scenario "Datensatz eines GT-31".
+    /// Scenario "Record of a GT-31".
     @Test func sbpRecord() throws {
         let bytes = LocosysTestFile.sbpHeader()
             + LocosysTestFile.sbpRecord(Fix(millisecond: 250, altitude: 123.45, speed: 2.5, course: 90, hdop: 1.0))
@@ -122,7 +122,7 @@ struct LocosysTests {
         #expect(result.warnings.isEmpty)
     }
 
-    /// Scenario "Dezember".
+    /// Scenario "December".
     @Test func december() {
         let value = UInt32(26 * 12 + 12) << 22 | UInt32(24) << 17
         #expect(SBPFileFormat.time(value, milliseconds: 0) == date("2026-12-24T00:00:00Z"))
@@ -136,14 +136,14 @@ struct LocosysTests {
         #expect(result.warnings.map(\.kind) == [.truncatedFile])
     }
 
-    /// Scenario "Keine SBN-Datei".
+    /// Scenario "Not an SBN file".
     @Test func sbnWithoutInformation() {
         #expect(throws: GPSLoggerError(.malformed(line: nil), fileName: "a.sbn")) {
             try read(LocosysTestFile.sbnNavigation(Fix()), name: "a.sbn", SBNFileFormat())
         }
     }
 
-    /// Scenario "Navigationspaket".
+    /// Scenario "Navigation packet".
     @Test func sbnNavigation() throws {
         let bytes = LocosysTestFile.sbnInformation()
             + LocosysTestFile.sbnNavigation(Fix(second: 1, millisecond: 500, altitude: 100))
@@ -156,7 +156,7 @@ struct LocosysTests {
         #expect(result.recording.tracks.map(\.name) == ["log"])
     }
 
-    /// Scenarios "Gültiger 3D-Fix mit DGPS" and "Ungültige Lösung".
+    /// Scenarios "Valid 3D fix with DGPS" and "Invalid solution".
     @Test func sbnFixTypes() {
         #expect(SBNFileFormat.fix(validity: 0, mode: 0x84) == .dgps)
         #expect(SBNFileFormat.fix(validity: 0, mode: 0x83) == .twoD)
@@ -165,7 +165,7 @@ struct LocosysTests {
         #expect(SBNFileFormat.fix(validity: 1, mode: 0x04) == FixType.none)
     }
 
-    /// Scenario "Falsche Prüfsumme".
+    /// Scenario "Wrong checksum".
     @Test func sbnWrongChecksum() throws {
         var bytes = LocosysTestFile.sbnInformation() + LocosysTestFile.sbnNavigation(Fix(second: 0))
         let bad = LocosysTestFile.sbnNavigation(Fix(second: 1))
@@ -195,7 +195,7 @@ struct LocosysTests {
         #expect(throws: CancellationError.self) { try result.get() }
     }
 
-    /// Spec `logger-kit-gpl`, "Locosys-Formate abfragen".
+    /// Spec `logger-kit-gpl`, "Query the Locosys formats".
     @Test func catalog() throws {
         let ids = GPLFileFormats.all.map(\.id)
         #expect(ids.contains(.sbp) && ids.contains(.sbn))
@@ -207,7 +207,7 @@ struct LocosysTests {
 struct LocosysDetectionTests {
     private let catalog = FormatCatalog.standard.adding(GPLFileFormats.all)
 
-    /// Scenarios "SBN-Datei" and "SBP-Datei".
+    /// Scenarios "SBN file" and "SBP file".
     @Test func detected() {
         #expect(catalog.detect(prefix: Data(LocosysTestFile.sbnFixture()), fileName: "a.sbn")?.id == .sbn)
         #expect(catalog.detect(prefix: Data(LocosysTestFile.sbpFixture()), fileName: "a.sbp")?.id == .sbp)
@@ -217,7 +217,7 @@ struct LocosysDetectionTests {
         #expect(SBPFileFormat().matches(prefix: Data(noMarker)))
     }
 
-    /// Scenario "Andere Dateien" and the other way round.
+    /// Scenario "Other files" and the other way round.
     @Test func otherFiles() {
         let others = [SkyTraqTestDump.venus().bytes, MTKTestDump.mtkFixture().bytes, MTKTestDump.m241Fixture().bytes,
                       WintecTestFile.tesFixture(), WintecTestFile.binFixture(), WintecTestFile.tk1Fixture()]

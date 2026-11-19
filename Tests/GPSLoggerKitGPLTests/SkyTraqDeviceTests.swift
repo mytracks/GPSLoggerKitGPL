@@ -87,7 +87,7 @@ private func driver(initial: Int? = nil, download: Int = 230_400) -> SkyTraqDevi
 
 @Suite("SkyTraq device")
 struct SkyTraqDeviceTests {
-    /// Scenario "Auslesen": probing at 38400, download at 230400, restart, same points as the dump decoder.
+    /// Scenario "Reading": probing at 38400, download at 230400, restart, same points as the dump decoder.
     @Test func readsTheMemory() async throws {
         let dump = SkyTraqTestDump.venus()
         let simulator = SkyTraqSimulator(baud: 38400, memory: dump.bytes, usedSectors: 1)
@@ -105,7 +105,7 @@ struct SkyTraqDeviceTests {
         #expect(!progress.values.isEmpty)
     }
 
-    /// Scenario "Bekannte Baudrate": only the given rate is probed.
+    /// Scenario "Known baud rate": only the given rate is probed.
     @Test func initialBaudRate() async throws {
         let simulator = SkyTraqSimulator(baud: 38400, memory: SkyTraqTestDump.venus().bytes, usedSectors: 2)
         let connection = device(for: simulator)
@@ -113,7 +113,7 @@ struct SkyTraqDeviceTests {
         #expect(await connection.baudChanges == [38400])
     }
 
-    /// Scenario "Einzelne Sektoren": NACK on the multi-sector read falls back to single sectors.
+    /// Scenario "Single sectors": NACK on the multi-sector read falls back to single sectors.
     @Test func singleSectorFallback() async throws {
         let simulator = SkyTraqSimulator(baud: 9600, memory: SkyTraqTestDump.venus().bytes, usedSectors: 2)
         simulator.multiReadSupported = false
@@ -122,7 +122,7 @@ struct SkyTraqDeviceTests {
         #expect(simulator.commands.filter { $0 == 0x1B }.count == 3)  // used + 1, as in the source
     }
 
-    /// Scenario "Kein Logger".
+    /// Scenario "No logger".
     @Test func noLogger() async {
         let silent = SimulatedDevice { _, _ in [] }
         await #expect(throws: DeviceProtocolError("No SkyTraq logger found on this port")) {
@@ -130,7 +130,7 @@ struct SkyTraqDeviceTests {
         }
     }
 
-    /// Scenario "Speicher löschen".
+    /// Scenario "Erase the memory".
     @Test func erase() async throws {
         let simulator = SkyTraqSimulator(baud: 115_200, memory: [], usedSectors: 0)
         try await driver().erase(device(for: simulator), DeviceReporter())
@@ -138,7 +138,7 @@ struct SkyTraqDeviceTests {
         #expect(driver().eraseSupport == .supported)
     }
 
-    /// Scenario "Prüfsummenfehler".
+    /// Scenario "Checksum error".
     @Test func checksumError() async {
         let corrupt = SimulatedDevice { written, _ in
             guard written.count > 4, written[4] == 0x02 else { return [] }

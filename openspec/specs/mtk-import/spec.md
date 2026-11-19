@@ -1,99 +1,99 @@
 # mtk-import Specification
 
 ## Purpose
-Liest Speicherabbilder von MTK-Loggern (mtk-bin) und Holux-Loggern (m241-bin), portiert aus gpsbabel 1.7.0. Daraus entstehen Tracks und Wegpunkte mit Positionsqualität.
+Reads memory images of MTK loggers (mtk-bin) and Holux loggers (m241-bin), ported from gpsbabel 1.7.0. They become tracks and waypoints with position quality.
 
 ## Requirements
 
-### Requirement: Kopf
-Der Import SHALL aus dem Kopf am Anfang des Abbilds die Formatmaske (Bytes 2–5, Little Endian) übernehmen. Ist die Aufzeichnungsart (Bytes 6–7) weder `0x0104` noch `0x0106` und ist die Datei größer als 64 KiB, SHALL er den Kopf des zweiten Blocks verwenden.
+### Requirement: Header
+The import SHALL take the format mask (bytes 2–5, little endian) from the header at the start of the image. If the recording mode (bytes 6–7) is neither `0x0104` nor `0x0106` and the file is larger than 64 KiB, it SHALL use the header of the second block.
 
-#### Scenario: Ungültiger erster Kopf
-- **WHEN** der Kopf des ersten Blocks die Aufzeichnungsart `0x0000` hat und der zweite Block einen gültigen Kopf
-- **THEN** gilt die Formatmaske des zweiten Kopfs
+#### Scenario: Invalid first header
+- **WHEN** the header of the first block has the recording mode `0x0000` and the second block has a valid header
+- **THEN** the format mask of the second header applies
 
-### Requirement: Blöcke
-Der Import SHALL das Abbild in Blöcken zu 64 KiB lesen, die Datensätze eines Blocks ab Offset `0x200`. Vier Bytes `0xFF` oder das Blockende SHALL den Block beenden, und das Lesen SHALL im nächsten Block bei `0x200` weitergehen.
+### Requirement: Blocks
+The import SHALL read the image in blocks of 64 KiB, the records of a block from offset `0x200`. Four bytes `0xFF` or the end of the block SHALL end the block, and reading SHALL continue in the next block at `0x200`.
 
-#### Scenario: Zwei Blöcke
-- **WHEN** der erste Block nach drei Datensätzen mit `0xFF` aufgefüllt ist und der zweite Block ab `0x200` zwei weitere enthält
-- **THEN** ergibt das Abbild fünf Punkte
+#### Scenario: Two blocks
+- **WHEN** the first block is padded with `0xFF` after three records and the second block contains two more from `0x200`
+- **THEN** the image results in five points
 
-### Requirement: Felder der Datensätze
-Jeder Datensatz SHALL die Felder enthalten, deren Bit in der Formatmaske gesetzt ist, in aufsteigender Bitreihenfolge und Little Endian. Ausgewertet werden Zeit (UTC, Sekunden seit 1970), Gültigkeit, Breite, Länge, Höhe, Geschwindigkeit (km/h), Kurs, PDOP, HDOP und VDOP (Hundertstel), genutzte Satelliten und Millisekunden; die übrigen Felder SHALL nur übersprungen werden. Ein Datensatz ohne Breite oder Länge SHALL keinen Punkt ergeben.
+### Requirement: Fields of the records
+Every record SHALL contain the fields whose bit is set in the format mask, in ascending bit order and little endian. Evaluated are time (UTC, seconds since 1970), validity, latitude, longitude, height, speed (km/h), course, PDOP, HDOP and VDOP (hundredths), used satellites and milliseconds; the other fields SHALL only be skipped. A record without latitude or longitude SHALL NOT result in a point.
 
-#### Scenario: Datensatz eines iBlue 747
-- **WHEN** die Formatmaske Zeit, Gültigkeit, Breite, Länge, Höhe und Geschwindigkeit enthält und ein Datensatz 2026-11-02T12:00:00Z, SPS, 50,0°, 8,0°, 100 m und 36 km/h codiert
-- **THEN** entsteht ein Punkt mit diesen Werten, der Fix-Art `3d` und der Geschwindigkeit 10 m/s
+#### Scenario: Record of an iBlue 747
+- **WHEN** the format mask contains time, validity, latitude, longitude, height and speed and a record encodes 2026-11-02T12:00:00Z, SPS, 50.0°, 8.0°, 100 m and 36 km/h
+- **THEN** a point results with these values, the fix type `3d` and the speed 10 m/s
 
-#### Scenario: Millisekunden
-- **WHEN** die Formatmaske Millisekunden enthält und ein Datensatz den Wert 500 hat
-- **THEN** liegt die Zeit des Punkts 0,5 s nach der vollen Sekunde
+#### Scenario: Milliseconds
+- **WHEN** the format mask contains milliseconds and a record has the value 500
+- **THEN** the time of the point lies 0.5 s after the full second
 
-### Requirement: Prüfsumme
-Bei MTK-Loggern SHALL nach den Feldern ein `*` und eine Prüfsumme folgen, bei Holux nur die Prüfsumme. Die Prüfsumme SHALL das XOR aller Feldbytes sein. Fehlt bei einem MTK-Logger das `*` und steht dort `0xFF`, SHALL der Datensatz ohne Punkt übersprungen werden.
+### Requirement: Checksum
+For MTK loggers a `*` and a checksum SHALL follow the fields, for Holux only the checksum. The checksum SHALL be the XOR of all field bytes. If the `*` is missing for an MTK logger and `0xFF` is there instead, the record SHALL be skipped without a point.
 
-#### Scenario: Falsche Prüfsumme
-- **WHEN** die Prüfsumme eines Datensatzes nicht stimmt
-- **THEN** entsteht daraus kein Punkt, und eine Warnung zählt den Datensatz
+#### Scenario: Wrong checksum
+- **WHEN** the checksum of a record is wrong
+- **THEN** no point results from it, and a warning counts the record
 
-### Requirement: Satellitendaten
-Ist das Bit für Satellitendaten gesetzt, SHALL der Datensatz für jeden gesehenen Satelliten einen Block aus Kennung, Nutzung und Anzahl sowie, falls gesetzt, Elevation, Azimut und Signalstärke enthalten. Die Anzahl der Blöcke SHALL aus dem ersten Block folgen; bei 0 Satelliten SHALL ein Block ohne die optionalen Felder folgen. Diese Daten SHALL übersprungen, aber in die Prüfsumme einbezogen werden.
+### Requirement: Satellite data
+If the bit for satellite data is set, the record SHALL contain for every satellite in view a block of identifier, use and count and, if set, elevation, azimuth and signal strength. The number of blocks SHALL follow from the first block; with 0 satellites one block without the optional fields SHALL follow. These data SHALL be skipped but included in the checksum.
 
-#### Scenario: Drei Satelliten
-- **WHEN** ein Datensatz Satellitendaten für drei Satelliten mit Elevation, Azimut und Signalstärke enthält
-- **THEN** wird der folgende Datensatz an der richtigen Stelle gelesen, und die Prüfsumme stimmt
+#### Scenario: Three satellites
+- **WHEN** a record contains satellite data for three satellites with elevation, azimuth and signal strength
+- **THEN** the following record is read at the right place, and the checksum matches
 
-### Requirement: Fix-Art
-Die Gültigkeit SHALL so übernommen werden: `0x0001` ergibt die Fix-Art `none`, `0x0002` ergibt `3d`, `0x0004` ergibt `dgps`; alle anderen Werte ergeben keine Fix-Art. Ein Punkt ohne Fix oder mit unbekannter Fix-Art an der Position 90° N/0° oder 0°/0° SHALL verworfen werden.
+### Requirement: Fix type
+The validity SHALL be taken over like this: `0x0001` gives the fix type `none`, `0x0002` gives `3d`, `0x0004` gives `dgps`; all other values give no fix type. A point without a fix or with an unknown fix type at the position 90° N/0° or 0°/0° SHALL be discarded.
 
-#### Scenario: Unsinnige Position
-- **WHEN** ein Datensatz die Gültigkeit `0x0001` und die Position 0°/0° hat
-- **THEN** entsteht daraus kein Punkt
+#### Scenario: Nonsensical position
+- **WHEN** a record has the validity `0x0001` and the position 0°/0°
+- **THEN** no point results from it
 
-### Requirement: Info-Blöcke
-Ein Block aus sieben Bytes `0xAA`, einem Typ, vier Datenbytes und vier Bytes `0xBB` SHALL als Info-Block gelesen werden und keinen Punkt ergeben. Typ `0x02` SHALL die Formatmaske ab dem folgenden Datensatz ändern.
+### Requirement: Info blocks
+A block of seven bytes `0xAA`, a type, four data bytes and four bytes `0xBB` SHALL be read as an info block and SHALL NOT result in a point. Type `0x02` SHALL change the format mask from the following record on.
 
-#### Scenario: Neue Formatmaske
-- **WHEN** ein Info-Block vom Typ `0x02` die Millisekunden aus der Formatmaske entfernt
-- **THEN** werden die folgenden Datensätze ohne dieses Feld gelesen
+#### Scenario: New format mask
+- **WHEN** an info block of type `0x02` removes the milliseconds from the format mask
+- **THEN** the following records are read without this field
 
 ### Requirement: Tracks
-Bei MTK-Loggern SHALL ein Info-Block vom Typ `0x07` mit dem Wert `0x0106` (Logger eingeschaltet) einen neuen Track beginnen, bei Holux eine Änderung von Intervall (Typ `0x03`) oder Distanz (Typ `0x04`). Ein Abbild mit einem Track SHALL den Dateinamen ohne Endung als Tracknamen tragen; mehrere Tracks SHALL zusätzlich ihre laufende Nummer in Klammern tragen.
+For MTK loggers an info block of type `0x07` with the value `0x0106` (logger switched on) SHALL start a new track, for Holux a change of interval (type `0x03`) or distance (type `0x04`). An image with one track SHALL carry the file name without extension as track name; several tracks SHALL additionally carry their running number in parentheses.
 
-#### Scenario: Logger zweimal eingeschaltet
-- **WHEN** zwischen zwei Gruppen von Datensätzen ein Info-Block „Logger eingeschaltet“ steht
-- **THEN** enthält die Aufzeichnung zwei Tracks `log (1)` und `log (2)` für die Datei `log.bin`
+#### Scenario: Logger switched on twice
+- **WHEN** an info block "logger switched on" lies between two groups of records
+- **THEN** the recording contains two tracks `log (1)` and `log (2)` for the file `log.bin`
 
-### Requirement: Wegpunkte
-Ein Datensatz, dessen Aufzeichnungsgrund das Bit `0x0008` (Taste) enthält, SHALL zusätzlich einen Wegpunkt an derselben Position ergeben. Bei Holux SHALL ein Datensatz nach der Kennung `HOLUX…WAYPNT` ebenso einen Wegpunkt ergeben. Die Wegpunkte SHALL `POI` gefolgt von ihrer laufenden Nummer heißen.
+### Requirement: Waypoints
+A record whose recording reason contains the bit `0x0008` (button) SHALL additionally result in a waypoint at the same position. For Holux a record after the identifier `HOLUX…WAYPNT` SHALL also result in a waypoint. The waypoints SHALL be named `POI` followed by their running number.
 
-#### Scenario: Taste gedrückt
-- **WHEN** ein Datensatz den Aufzeichnungsgrund `0x0008` hat
-- **THEN** entstehen ein Trackpunkt und ein Wegpunkt `POI 1`
+#### Scenario: Button pressed
+- **WHEN** a record has the recording reason `0x0008`
+- **THEN** a track point and a waypoint `POI 1` result
 
 ### Requirement: Holux
-Das Format `m241-bin` SHALL Breite und Länge als 32-Bit-Gleitkommazahlen und die Höhe als die oberen drei Bytes einer 32-Bit-Gleitkommazahl lesen und das Bit 31 der Formatmaske ignorieren. Kennungen `HOLUX…` mit 16 Byte (gefolgt von vier optionalen Leerzeichen) SHALL übersprungen werden. Nach der Kennung `HOLUXGR245` oder `HOLUXM1200` SHALL der Import die Höhe aus dem Feld der Geschwindigkeit und die Geschwindigkeit in cm/s aus dem Feld der Höhe lesen.
+The format `m241-bin` SHALL read latitude and longitude as 32-bit floating-point numbers and the height as the upper three bytes of a 32-bit floating-point number and ignore bit 31 of the format mask. Identifiers `HOLUX…` of 16 bytes (followed by four optional spaces) SHALL be skipped. After the identifier `HOLUXGR245` or `HOLUXM1200` the import SHALL read the height from the speed field and the speed in cm/s from the height field.
 
 #### Scenario: Holux M-241
-- **WHEN** ein Holux-Abbild einen Datensatz mit 50,0°, 8,0° und 100 m enthält
-- **THEN** entsteht ein Punkt mit dieser Position auf die Genauigkeit einer 32-Bit-Gleitkommazahl und mit 100 m Höhe
+- **WHEN** a Holux image contains a record with 50.0°, 8.0° and 100 m
+- **THEN** a point results with this position to the precision of a 32-bit floating-point number and with 100 m elevation
 
 #### Scenario: Holux GPSport 245
-- **WHEN** nach der Kennung `HOLUXGR245LOGGER` ein Datensatz im Feld der Höhe 500 und im Feld der Geschwindigkeit 120 m codiert
-- **THEN** hat der Punkt die Geschwindigkeit 5 m/s und die Höhe 120 m
+- **WHEN** after the identifier `HOLUXGR245LOGGER` a record encodes 500 in the height field and 120 m in the speed field
+- **THEN** the point has the speed 5 m/s and the elevation 120 m
 
-### Requirement: Erkennung der MTK-Formate
-Die Formaterkennung SHALL ein MTK-Abbild an einem Kopf mit gesetztem Zeit-Bit in der Formatmaske, gültiger Aufzeichnungsart und einem Info-Block, einer Holux-Kennung oder einem Datensatz mit gültiger Prüfsumme bei `0x200` erkennen. Enthält der Bereich ab `0x200` eine Kennung `HOLUX` oder ist das Bit 31 der Formatmaske gesetzt, SHALL sie `m241-bin` vorschlagen, sonst `mtk-bin`.
+### Requirement: Detection of the MTK formats
+The format detection SHALL recognize an MTK image by a header with the time bit set in the format mask, a valid recording mode and an info block, a Holux identifier or a record with a valid checksum at `0x200`. If the range from `0x200` contains an identifier `HOLUX` or bit 31 of the format mask is set, it SHALL suggest `m241-bin`, otherwise `mtk-bin`.
 
-#### Scenario: Abbild eines iBlue 747
-- **WHEN** die Datei `data.bin` eines MTK-Loggers geprüft wird
-- **THEN** schlägt die Erkennung `mtk-bin` vor
+#### Scenario: Image of an iBlue 747
+- **WHEN** the file `data.bin` of an MTK logger is checked
+- **THEN** the detection suggests `mtk-bin`
 
-#### Scenario: Abbild eines Holux M-241
-- **WHEN** ein Abbild mit der Kennung `HOLUXGR241LOGGER` geprüft wird
-- **THEN** schlägt die Erkennung `m241-bin` vor
+#### Scenario: Image of a Holux M-241
+- **WHEN** an image with the identifier `HOLUXGR241LOGGER` is checked
+- **THEN** the detection suggests `m241-bin`
 
-#### Scenario: SkyTraq-Abbild
-- **WHEN** ein SkyTraq-Abbild geprüft wird
-- **THEN** schlägt die Erkennung weder `mtk-bin` noch `m241-bin` vor
+#### Scenario: SkyTraq image
+- **WHEN** a SkyTraq image is checked
+- **THEN** the detection suggests neither `mtk-bin` nor `m241-bin`

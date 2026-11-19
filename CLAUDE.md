@@ -1,37 +1,38 @@
 # GPSLoggerKitGPL
 
-Swift-Paket (GPL-3.0-or-later, nur macOS 12+) für Dateiformate und Geräteprotokolle von GPS-Loggern, die aus GPL- oder
-damit vereinbaren Quellen portiert sind. Baut auf GPSLoggerKit (MIT, `mytracks/GPSLoggerKit`) auf und wird von
-myTracks Loader (`mytracks/gpsloader`) per Paket-URL und Version eingebunden.
+Swift package (GPL-3.0-or-later, macOS 12+ only) for file formats and device protocols of GPS loggers that are ported
+from GPL or compatible sources. Builds on GPSLoggerKit (MIT, `mytracks/GPSLoggerKit`) and is used by myTracks Loader
+(`mytracks/gpsloader`) by package URL and version.
 
-## Arbeitsweise
+## Way of working
 
-- Spec-getrieben mit **OpenSpec** (`openspec/`). Vor neuen Features einen Change anlegen (`/opsx:propose`).
-- Verbindlich sind Kontext und Regeln in `openspec/config.yaml`; „noch nicht bestätigt“ heißt: vorher mit dem
-  Entwickler klären.
-- Kommunikation und OpenSpec-Artefakte auf Deutsch. Code, Bezeichner, Kommentare, README und PROVENANCE auf Englisch.
-- Ein Change ändert nur dieses Repository. Braucht eine Portierung etwas in GPSLoggerKit, ist das ein eigener Change
-  dort (allgemein, ohne Code aus der Vorlage); die App übernimmt neue Versionen mit eigenen Changes.
-- Die Planungshistorie bis 2026-11-19 liegt in `mytracks/gpsloader` unter `openspec/changes/archive/`.
+- Spec-driven with **OpenSpec** (`openspec/`). Before new features, create a change (`/opsx:propose`).
+- The context and rules in `openspec/config.yaml` are binding; "not yet confirmed" means: clarify with the developer
+  first.
+- Language (decided on 2026-11-19): everything in this repository is English, including OpenSpec artifacts. The
+  conversation with the developer is in German. Localized format names exist in German and English.
+- A change modifies only this repository. If a port needs something in GPSLoggerKit, that is a change of its own there
+  (generic, without code from the template); the app takes over new versions with changes of its own.
+- The planning history up to 2026-11-19 is in `mytracks/gpsloader` under `openspec/changes/archive/` (in German).
 
-## Portierungen (wichtig)
+## Ports (important)
 
-- GPL-Quelltext nur in einem Change lesen, dessen Proposal die Familie diesem Paket zuordnet, und nur für diese Familie.
-  Ist eine Familie portiert, bleibt sie hier.
-- Nur Vorlagen mit GPL-3.0-vereinbarer Lizenz; jede portierte Datei trägt die Urheberhinweise der Vorlage und
-  `SPDX-License-Identifier: GPL-3.0-or-later`. `PROVENANCE.md` und `GPLFileFormats.credits` pflegen.
-- gpsbabel-Vorlagen vom Tag `gpsbabel_1_7_0`, nur in einem temporären Ordner, nie im Repository. Das
-  gpsbabel-Binary nur zur Black-Box-Gegenprüfung, als Prozess mit Argument-Array, nie über eine Shell.
+- Read GPL source code only in a change whose proposal assigns the family to this package, and only for this family.
+  Once a family is ported, it stays here.
+- Only templates with a license compatible with GPL-3.0; every ported file carries the notices of the template and
+  `SPDX-License-Identifier: GPL-3.0-or-later`. Keep `PROVENANCE.md` and `GPLFileFormats.credits` up to date.
+- gpsbabel templates from the tag `gpsbabel_1_7_0`, only in a temporary folder, never in the repository. The gpsbabel
+  binary only for black-box cross-checks, as a process with an argument array, never through a shell.
 
-## Wichtige Orte
+## Important places
 
-- `Sources/GPSLoggerKitGPL/`: je Familie ein Ordner (Formate und Geräteprotokolle), `Support/` für Hilfsfunktionen.
-- `Tests/GPSLoggerKitGPLTests/`: Tests mit Fixtures und simulierten Geräten; keine echten Ortsdaten.
-- Alt-Quellen nur lesen, im Nachbar-Checkout: `../gpsloader/input/mytracks4mac/`, Analyse
+- `Sources/GPSLoggerKitGPL/`: one folder per family (formats and device protocols), `Support/` for helpers.
+- `Tests/GPSLoggerKitGPLTests/`: tests with fixtures and simulated devices; no real location data.
+- Old sources, read only, in the neighboring checkout: `../gpsloader/input/mytracks4mac/`, analysis
   `../gpsloader/docs/legacy-analysis.md`.
 
-## Technik
+## Technology
 
-- macOS 12+, Swift 6 Language Mode, Strict Concurrency; einzige Abhängigkeit GPSLoggerKit.
-- Tests: `swift test`. Lokal gegen einen ausgecheckten GPSLoggerKit-Stand: `swift package edit GPSLoggerKit --path ../GPSLoggerKit`.
-- Releases: `Scripts/release.sh <Version>` (Tag und GitHub-Release, nur nach Freigabe des Entwicklers).
+- macOS 12+, Swift 6 language mode, strict concurrency; the only dependency is GPSLoggerKit.
+- Tests: `swift test`. Locally against a checked-out GPSLoggerKit: `swift package edit GPSLoggerKit --path ../GPSLoggerKit`.
+- Releases: `Scripts/release.sh <version>` (tag and GitHub release, only after the developer's approval).

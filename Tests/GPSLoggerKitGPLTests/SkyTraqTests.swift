@@ -24,7 +24,7 @@ private func date(_ text: String) -> Date {
 
 @Suite("GPSLoggerKitGPL support")
 struct ImportSupportTests {
-    /// Scenario "Aktueller Wochenzyklus".
+    /// Scenario "Current week cycle".
     @Test func currentWeekCycle() {
         let week = GPSTime.absoluteWeek(tenBit: 380, reference: skyTraqReference)
         #expect(week == 2428)
@@ -77,7 +77,7 @@ struct ImportSupportTests {
 
 @Suite("SkyTraq dumps")
 struct SkyTraqTests {
-    /// Scenario "Position aus ECEF" and "Zeit eines vollen Eintrags".
+    /// Scenario "Position from ECEF" and "Time of a full entry".
     @Test func fullItem() throws {
         var dump = SkyTraqTestDump()
         dump.append(SkyTraqTestDump.full(week: 380, second: 302_400, latitude: 50, longitude: 8, height: 100, speed: 36))
@@ -97,7 +97,7 @@ struct SkyTraqTests {
         #expect(SkyTraqDump.middleEndian32(ByteReader(bytes: bytes), 0) == 0x1234_5678)
     }
 
-    /// Scenario "Fortgeschriebene Position".
+    /// Scenario "Continued position".
     @Test func compactItemContinuesFromTheFullOne() throws {
         let (x, y, z) = SkyTraqTestDump.ecef(latitude: 50, longitude: 8, height: 100)
         var dump = SkyTraqTestDump()
@@ -120,7 +120,7 @@ struct SkyTraqTests {
         }
     }
 
-    /// Scenario "Zehn Punkte pro Sekunde".
+    /// Scenario "Ten points per second".
     @Test func multiHzKeepsMilliseconds() throws {
         var dump = SkyTraqTestDump()
         dump.append(SkyTraqTestDump.multiHz(week: 380, millisecond: 302_400_000, latitude: 50, longitude: 8, height: 100.5, speed: 36))
@@ -135,7 +135,7 @@ struct SkyTraqTests {
         #expect(points[0].quality.speed == 10)
     }
 
-    /// Scenario "Taste gedrückt", plus a POI item at high rate.
+    /// Scenario "Button pressed", plus a POI item at high rate.
     @Test func poiItemsBecomeWaypoints() throws {
         var dump = SkyTraqTestDump()
         dump.append(SkyTraqTestDump.full(week: 380, second: 1, latitude: 50, longitude: 8, height: 100))
@@ -152,7 +152,7 @@ struct SkyTraqTests {
         #expect(abs(result.recording.waypoints[1].latitude - 50.003) < 1e-6)
     }
 
-    /// Scenario "Leerer Sektor beendet das Abbild".
+    /// Scenario "Empty sector ends the image".
     @Test func emptySectorEndsTheDump() throws {
         var dump = SkyTraqTestDump()
         dump.append(SkyTraqTestDump.full(week: 380, second: 1, latitude: 50, longitude: 8, height: 100))
@@ -165,7 +165,7 @@ struct SkyTraqTests {
         #expect(result.warnings.isEmpty)
     }
 
-    /// Scenario "Voller Sektor": a sector used up to less than 18 bytes before its end is followed.
+    /// Scenario "Full sector": a sector used up to less than 18 bytes before its end is followed.
     @Test func fullSectorIsFollowed() throws {
         let result = try read(SkyTraqTestDump.venus())
         #expect(result.recording.trackPointCount == 509 + 7)
@@ -177,7 +177,7 @@ struct SkyTraqTests {
         #expect(result.recording.trackPointCount == 1)
     }
 
-    /// Scenario "Unbekannter Eintrag".
+    /// Scenario "Unknown entry".
     @Test func unknownItemTruncatesTheDump() throws {
         var dump = SkyTraqTestDump()
         for second in 1...3 {
@@ -200,7 +200,7 @@ struct SkyTraqTests {
         #expect(result.warnings.map(\.kind) == [.truncatedFile])
     }
 
-    /// Scenario "Komprimierter Eintrag am Anfang".
+    /// Scenario "Compressed entry at the start".
     @Test func compactItemWithoutPosition() throws {
         var dump = SkyTraqTestDump()
         dump.append(SkyTraqTestDump.compact(dt: 1, dx: 1, dy: 1, dz: 1))
@@ -211,7 +211,7 @@ struct SkyTraqTests {
         #expect(result.warnings.map(\.kind) == [.malformedRecord])
     }
 
-    /// Scenario "Abbild aus gpsbabel" and one track per dump.
+    /// Scenario "Image from gpsbabel" and one track per dump.
     @Test func oneTrackPerDump() throws {
         let one = SkyTraqTestDump.full(week: 380, second: 1, latitude: 50, longitude: 8, height: 100)
         let result = try read([("venus.bin", Data(one)), ("second.bin", Data(one + one))])
@@ -246,7 +246,7 @@ struct SkyTraqTests {
 struct SkyTraqDetectionTests {
     private let catalog = FormatCatalog.standard.adding(GPLFileFormats.all)
 
-    /// Scenario "Abbild mit Endung .bin".
+    /// Scenario "Image with extension .bin".
     @Test func dumpIsDetected() {
         let prefix = SkyTraqTestDump.venus().data.prefix(4096)
         #expect(catalog.detect(prefix: Data(prefix), fileName: "log.bin")?.id == .skytraqBin)
@@ -260,7 +260,7 @@ struct SkyTraqDetectionTests {
         #expect(SkyTraqBinFileFormat().matches(prefix: dump.data))
     }
 
-    /// Scenario "Andere Binärdatei".
+    /// Scenario "Other binary file".
     @Test func otherBinaryFilesAreNotDetected() {
         var generator = SystemRandomNumberGenerator()
         for _ in 0..<50 {

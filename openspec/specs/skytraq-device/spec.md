@@ -1,49 +1,49 @@
 # skytraq-device Specification
 
 ## Purpose
-Liest und löscht Logger mit SkyTraq-Venus-Chipsatz (Canmore, MiniHomer u. a.) über die serielle Schnittstelle, portiert aus gpsbabel 1.7.0, mit automatischer Suche der Baudrate.
+Reads and erases loggers with a SkyTraq Venus chipset (Canmore, MiniHomer and others) over the serial port, ported from gpsbabel 1.7.0, with automatic search of the baud rate.
 
 ## Requirements
 
-### Requirement: Nachrichtenrahmen
-Der Treiber SHALL Nachrichten als `0xA0 0xA1`, Länge (16 Bit, Big Endian), Nutzdaten, XOR-Prüfsumme der Nutzdaten und `0x0D 0x0A` senden und empfangen. Vor dem Senden SHALL er ungelesene Eingangsdaten verwerfen. Eine Nachricht SHALL bis zu dreimal gesendet werden, bis das Gerät sie mit `0x83` und ihrer Kennung bestätigt; `0x84` gilt als Ablehnung. Eine Bestätigung mit Kennung 0 SHALL übergangen werden. Eine falsche Prüfsumme MUST den Vorgang mit einem Protokollfehler beenden.
+### Requirement: Message frame
+The driver SHALL send and receive messages as `0xA0 0xA1`, length (16 bit, big endian), payload, XOR checksum of the payload and `0x0D 0x0A`. Before sending it SHALL discard unread input. A message SHALL be sent up to three times until the device acknowledges it with `0x83` and its identifier; `0x84` counts as a refusal. An acknowledgment with identifier 0 SHALL be skipped. A wrong checksum MUST end the operation with a protocol error.
 
-#### Scenario: Prüfsummenfehler
-- **WHEN** die Bestätigung des Geräts eine falsche Prüfsumme hat
-- **THEN** endet der Vorgang mit einem Protokollfehler
+#### Scenario: Checksum error
+- **WHEN** the device's acknowledgment has a wrong checksum
+- **THEN** the operation ends with a protocol error
 
-### Requirement: Baudrate finden
-Der Treiber SHALL die Baudrate des Geräts finden, indem er nacheinander 9600, 230400, 115200, 57600, 4800, 19200 und 38400 Baud einstellt und die Software-Version abfragt (`0x02 0x01`, Antwort `0x80`). Ist für das Gerät eine Anfangsrate festgelegt, SHALL er nur diese versuchen. Antwortet das Gerät auf keiner Rate, MUST der Vorgang mit einem Protokollfehler enden.
+### Requirement: Find the baud rate
+The driver SHALL find the baud rate of the device by setting 9600, 230400, 115200, 57600, 4800, 19200 and 38400 baud in turn and querying the software version (`0x02 0x01`, answer `0x80`). If an initial rate is set for the device, it SHALL try only this one. If the device answers on no rate, the operation MUST end with a protocol error.
 
-#### Scenario: Bekannte Baudrate
-- **WHEN** für das Gerät 38400 Baud festgelegt sind
-- **THEN** stellt der Treiber nur 38400 Baud ein
+#### Scenario: Known baud rate
+- **WHEN** 38400 baud is set for the device
+- **THEN** the driver sets only 38400 baud
 
-#### Scenario: Kein Logger
-- **WHEN** am Anschluss kein Gerät antwortet
-- **THEN** endet der Vorgang mit dem Hinweis, dass kein SkyTraq-Logger gefunden wurde
+#### Scenario: No logger
+- **WHEN** no device answers at the port
+- **THEN** the operation ends with the hint that no SkyTraq logger was found
 
-### Requirement: Auslesen
-Der Treiber SHALL auf die Download-Rate des Geräts umschalten (Befehl `0x05`), den Logstatus abfragen (`0x17`, Antwort `0x94`) und belegte Sektoren plus einen lesen. Er SHALL bis zu 255 Sektoren auf einmal anfordern (`0x1D`), nach einem Fehler weniger, und nach einer Ablehnung einzeln (`0x1B`). Ein leerer Sektor SHALL das Lesen beenden. Danach SHALL er die ursprüngliche Baudrate wiederherstellen und das Gerät neu starten.
+### Requirement: Reading
+The driver SHALL switch to the download rate of the device (command `0x05`), query the log status (`0x17`, answer `0x94`) and read the used sectors plus one. It SHALL request up to 255 sectors at once (`0x1D`), fewer after an error, and single sectors after a refusal (`0x1B`). An empty sector SHALL end reading. Then it SHALL restore the original baud rate and restart the device.
 
-#### Scenario: Auslesen
-- **WHEN** ein Logger mit 38400 Baud zwei belegte Sektoren meldet
-- **THEN** liest der Treiber mit 230400 Baud, stellt danach 38400 Baud wieder ein, startet das Gerät neu und liefert die Punkte der Sektoren
+#### Scenario: Reading
+- **WHEN** a logger at 38400 baud reports two used sectors
+- **THEN** the driver reads at 230400 baud, then sets 38400 baud again, restarts the device and returns the points of the sectors
 
-#### Scenario: Einzelne Sektoren
-- **WHEN** das Gerät das Lesen mehrerer Sektoren ablehnt
-- **THEN** liest der Treiber die Sektoren einzeln und liefert dieselben Punkte
+#### Scenario: Single sectors
+- **WHEN** the device refuses reading several sectors
+- **THEN** the driver reads the sectors one by one and returns the same points
 
-### Requirement: Dekodieren des Downloads
-Die gelesenen Sektoren SHALL wie ein Speicherabbild dekodiert werden (`skytraq-import`), mit der Ausnahme, dass nur ein leerer Sektor das Abbild beendet.
+### Requirement: Decoding the download
+The sectors read SHALL be decoded like a memory image (`skytraq-import`), except that only an empty sector ends the image.
 
-#### Scenario: Teilweise gefüllter Sektor
-- **WHEN** auf einen teilweise gefüllten Sektor ein weiterer mit Daten folgt, der noch zu den gelesenen gehört
-- **THEN** werden auch dessen Punkte übernommen, wie bei gpsbabel
+#### Scenario: Partly filled sector
+- **WHEN** a partly filled sector is followed by another one with data that still belongs to the sectors read
+- **THEN** its points are taken over too, as with gpsbabel
 
-### Requirement: Speicher löschen
-Der Treiber SHALL den Speicher mit dem Befehl `0x19` löschen und das Gerät danach neu starten.
+### Requirement: Erase the memory
+The driver SHALL erase the memory with the command `0x19` and restart the device afterwards.
 
-#### Scenario: Speicher löschen
-- **WHEN** der Anwender das Löschen bestätigt
-- **THEN** sendet der Treiber den Löschbefehl, und das Gerät wird neu gestartet
+#### Scenario: Erase the memory
+- **WHEN** the user confirms erasing
+- **THEN** the driver sends the erase command, and the device is restarted

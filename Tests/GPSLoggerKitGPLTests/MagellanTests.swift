@@ -74,7 +74,7 @@ private func input(_ name: String, _ text: String) -> FileInput {
 
 @Suite("Magellan sentences and files")
 struct MagellanTests {
-    /// Scenario "Tracksatz".
+    /// Scenario "Track sentence".
     @Test func trackSentence() throws {
         let text = MagellanTestFile.sentence("PMGNTRK,5030.000,N,00815.000,W,00100,M,123456.50,A,,021126")
         #expect(text.hasSuffix("*6D\r\n"))
@@ -86,7 +86,7 @@ struct MagellanTests {
         #expect(point.time == ISO8601DateFormatter().date(from: "2026-11-02T12:34:56Z").map { $0.addingTimeInterval(0.5) })
     }
 
-    /// Scenario "Wegpunkt mit Komma im Kommentar".
+    /// Scenario "Waypoint with a comma in the comment".
     @Test func waypointWithEscapedComma() throws {
         let text = MagellanTestFile.waypoint(latitude: 50.5, longitude: -8.25, altitude: 257, name: "HOME",
                                              comment: "A\u{1B}2CB", icon: "c")
@@ -108,7 +108,7 @@ struct MagellanTests {
         #expect(MagellanSentences.parse("$PMGNCMD,END*3D\r")?.checksumIsValid == true)
     }
 
-    /// Scenario "Tracklog-Datei".
+    /// Scenario "Track log file".
     @Test func trackLogFile() throws {
         let result = try MagellanFileFormat().read([input("TRACK01.LOG", MagellanTestFile.trackLog())])
         #expect(result.recording.tracks.map(\.name) == ["TRACK01"])
@@ -120,7 +120,7 @@ struct MagellanTests {
         #expect(points[1].time == MagellanTestFile.start.addingTimeInterval(1))
     }
 
-    /// Scenario "Wegpunktdatei".
+    /// Scenario "Waypoint file".
     @Test func waypointFile() throws {
         let result = try MagellanFileFormat().read([input("POI.UPT", MagellanTestFile.waypointFile())])
         #expect(result.recording.waypoints.map(\.name) == ["HOME", "SOUTH", "P3"])
@@ -128,7 +128,7 @@ struct MagellanTests {
         #expect(result.recording.tracks.isEmpty)
     }
 
-    /// Scenario "Falsche Prüfsumme", plus a line without `$` and the end command.
+    /// Scenario "Wrong checksum", plus a line without `$` and the end command.
     @Test func checksumMismatchAndForeignLines() throws {
         let start = MagellanTestFile.start
         let text = MagellanTestFile.track(latitude: 1, longitude: 2, altitude: 3, time: start)
@@ -142,7 +142,7 @@ struct MagellanTests {
         #expect(result.warnings.map(\.firstLine) == [2, 4])
     }
 
-    /// Scenario "NMEA-Datei" and detection of the Magellan files.
+    /// Scenario "NMEA file" and detection of the Magellan files.
     @Test func detection() {
         let format = MagellanFileFormat()
         let nmea = "$GPRMC,120000,A,5030.000,N,00815.000,E,0.0,0.0,021126,,*12\r\n$GPGGA,120000,5030.000,N,00815.000,E,1,05,1.0,100.0,M,,,,*1D\r\n"
@@ -155,7 +155,7 @@ struct MagellanTests {
         #expect(catalog.detect(prefix: Data(nmea.utf8), fileName: "x.log")?.id == .nmea)
     }
 
-    /// Spec `logger-kit-gpl`, "Magellan-Format abfragen".
+    /// Spec `logger-kit-gpl`, "Query the Magellan format".
     @Test func magellanIsInTheCatalog() throws {
         let format = try #require(GPLFileFormats.all.first { $0.id == .magellan })
         #expect(format.fileExtensions == ["log", "upt", "rte"])

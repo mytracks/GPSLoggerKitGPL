@@ -82,7 +82,7 @@ private func date(_ text: String) -> Date { ISO8601DateFormatter().date(from: te
 
 @Suite("Wintec files")
 struct WintecTests {
-    /// Scenario "Zeitstempel".
+    /// Scenario "Timestamp".
     @Test func timeStamp() {
         let value = WintecTestFile.stamp(2026, 11, 2, 12, 30, 15)
         #expect(WintecTime.date(value) == date("2026-11-02T12:30:15Z"))
@@ -92,7 +92,7 @@ struct WintecTests {
         #expect(WintecTime.date(WintecTestFile.stamp(2026, 2, 30, 0, 0, 0)) == nil)
     }
 
-    /// Scenario "Aufzeichnung eines WBT-202".
+    /// Scenario "Recording of a WBT-202".
     @Test func tesFile() throws {
         let bytes = (0..<3).flatMap { k in
             WintecTestFile.record16(flags: k == 1 ? 0x02 : 0, time: WintecTestFile.base + UInt32(k), latitude: 50 + Double(k),
@@ -107,7 +107,7 @@ struct WintecTests {
         #expect(result.recording.tracks.first?.segments.first?.points.first?.time == date("2026-11-02T12:00:00Z"))
     }
 
-    /// Scenario "Abgeschnittene TES-Datei".
+    /// Scenario "Truncated TES file".
     @Test func truncatedTES() throws {
         let bytes = Array(WintecTestFile.tesFixture().prefix(37))
         let result = try read(bytes, name: "a.tes", WintecTESFileFormat())
@@ -115,7 +115,7 @@ struct WintecTests {
         #expect(result.warnings.map(\.kind) == [.truncatedFile])
     }
 
-    /// Scenario "Neuer Track im Norden", plus the southern variant.
+    /// Scenario "New track in the north", plus the southern variant.
     @Test func binNewTracks() throws {
         let result = try read(WintecTestFile.binFixture(), name: "log.bin", WintecBinFileFormat())
         #expect(result.recording.tracks.map(\.pointCount) == [2, 3])
@@ -128,7 +128,7 @@ struct WintecTests {
         #expect(southern.recording.tracks[1].segments[0].points.first?.latitude == -50)
     }
 
-    /// Scenario "Datensätze mit Höhe" and 12-byte records without height.
+    /// Scenario "Records with altitude" and 12-byte records without height.
     @Test func binRecordLengths() throws {
         let with = try read(WintecTestFile.binFixture(), name: "a.bin", WintecBinFileFormat())
         #expect(with.recording.tracks.first?.segments.first?.points.first?.elevation == 123.4)
@@ -138,14 +138,14 @@ struct WintecTests {
         #expect(result.recording.tracks.first?.segments.first?.points.allSatisfy { $0.elevation == nil } == true)
     }
 
-    /// Scenario "Keine gültige Länge".
+    /// Scenario "No valid length".
     @Test func binWithoutValidLength() {
         #expect(throws: GPSLoggerError(.malformed(line: nil), fileName: "a.bin")) {
             try read([UInt8](repeating: 1, count: 13), name: "a.bin", WintecBinFileFormat())
         }
     }
 
-    /// Scenarios "Zwei Tracks und ein Wegpunkt" and "Mehrere Tracks".
+    /// Scenarios "Two tracks and one waypoint" and "Several tracks".
     @Test func tk1File() throws {
         let result = try read(WintecTestFile.tk1Fixture(), name: "log.tk1", WintecTK1FileFormat())
         #expect(result.recording.tracks.map(\.name) == ["log (1)", "log (2)"])
@@ -173,7 +173,7 @@ struct WintecTests {
         #expect(throws: CancellationError.self) { try result.get() }
     }
 
-    /// Spec `logger-kit-gpl`, "Wintec-Formate abfragen".
+    /// Spec `logger-kit-gpl`, "Query the Wintec formats".
     @Test func catalog() throws {
         let ids = GPLFileFormats.all.map(\.id)
         #expect([.wintecTES, .wbtBin, .wbtTK1].allSatisfy(ids.contains))
@@ -187,13 +187,13 @@ struct WintecTests {
 struct WintecDetectionTests {
     private let catalog = FormatCatalog.standard.adding(GPLFileFormats.all)
 
-    /// Scenario "TK1-Datei".
+    /// Scenario "TK1 file".
     @Test func tk1() {
         #expect(catalog.detect(prefix: Data(WintecTestFile.tk1Fixture().prefix(4096)), fileName: "a.tk1")?.id == .wbtTK1)
         #expect(catalog.detect(prefix: Data(WintecTestFile.tk1Fixture().prefix(4096)), fileName: "a.bin")?.id == .wbtTK1)
     }
 
-    /// Scenario "TES-Datei".
+    /// Scenario "TES file".
     @Test func tes() {
         #expect(catalog.detect(prefix: Data(WintecTestFile.tesFixture()), fileName: "TRK0001.TES")?.id == .wintecTES)
     }
@@ -202,7 +202,7 @@ struct WintecDetectionTests {
         #expect(catalog.detect(prefix: Data(WintecTestFile.binFixture()), fileName: "wbt.bin")?.id == .wbtBin)
     }
 
-    /// Scenario "Andere Abbilder" and the other way round.
+    /// Scenario "Other images" and the other way round.
     @Test func otherDumps() {
         let wintec: [FileFormatID] = [.wintecTES, .wbtBin, .wbtTK1]
         let others = [SkyTraqTestDump.venus().bytes, MTKTestDump.mtkFixture().bytes, MTKTestDump.m241Fixture().bytes]
