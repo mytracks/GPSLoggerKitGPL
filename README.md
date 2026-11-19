@@ -71,7 +71,7 @@ let catalog = FormatCatalog.standard.adding(GPLFileFormats.all)
    ```swift
    // Ported from <project> <path> (<tag or commit>).
    // Original: Copyright (C) <years> <authors>, <license of the source>.
-   // Translated to Swift and modified for gpsloader by Dirk Stichling, <YYYY-MM-DD>.
+   // Translated to Swift and modified for GPSLoggerKitGPL by Dirk Stichling, <YYYY-MM-DD>.
    // SPDX-License-Identifier: GPL-3.0-or-later
    ```
 
